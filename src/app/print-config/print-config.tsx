@@ -1,80 +1,79 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getDocument, GlobalWorkerOptions, version as pdfjsVersion } from 'pdfjs-dist';
 
-export default function PrintConfig() {
-  const router = useRouter();
-  const [config, setConfig] = useState({
-    color: 'bw',
-    pageSize: 'a4',
-    orientation: 'portrait',
-    pagesToPrint: 'all',
-    sided: 'single',
-    copies: 1,
-    remarks: '',
-    specificRange: '',
-  });
+// Set the worker URL for pdfjs-dist
+GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
-  // Function to calculate total price based on the selected configuration
-  // Function to calculate total price based on the selected configuration
-const calculateTotalPrice = () => {
-  const pricePerPage = config.color === 'bw' ? 2 : 5; // Rs.2 for B/W, Rs.5 for Color
-  let totalPages = 10; // Default to 10 pages for 'all'
-
-  // If pagesToPrint is 'specific', calculate pages based on the specific range
-  if (config.pagesToPrint === 'specific' && config.specificRange) {
-    const ranges = config.specificRange.split(',').map(range => range.split('-').map(Number));
-    totalPages = ranges.reduce((total, [start, end]) => total + (end ? end - start + 1 : 1), 0);
-  }
-
-  // If pagesToPrint is 'all', use default totalPages (10)
-  if (config.pagesToPrint === 'all') {
-    totalPages = 10; // Default to 10 pages if 'all' is selected
-  }
-
-  return totalPages * pricePerPage * config.copies;
-};
-
-
-  // Improved specific range validation
-interface Config {
-  color: 'bw' | 'color';
-  pageSize: 'a4' | 'letter' | 'legal';
-  orientation: 'portrait' | 'landscape';
-  pagesToPrint: 'all' | 'specific';
-  sided: 'single' | 'double';
+type Config = {
+  color: string;
+  pageSize: string;
+  orientation: string;
+  pagesToPrint: string;
+  sided: string;
   copies: number;
   remarks: string;
   specificRange: string;
-}
-
-const validateRange = (specificRange: string): boolean => {
-  const regex = /^(\d+(-\d+)?(, \d+(-\d+)?)*|\d+)$/; // Matches ranges like "1-5, 8, 11-13"
-  return regex.test(specificRange);
+  totalPrice: number;
 };
 
-const handleSave = () => {
-  if (config.pagesToPrint === 'specific' && !validateRange(config.specificRange)) {
-    alert('Invalid range format! Please use the format "1-5, 8, 11-13".');
-    return;
-  }
+export default function PrintConfig({ selectedFile, initialConfig, onSave }: { selectedFile: File, initialConfig: Config, onSave: (config: Config) => void }) {
+  const router = useRouter();
+  const [config, setConfig] = useState({
+    ...initialConfig,
+  });
+  const [totalPages, setTotalPages] = useState<number>(10);
 
-  const totalPrice = calculateTotalPrice();
-  const query = new URLSearchParams({
-    totalPrice: totalPrice.toString(),
-    color: config.color,
-    pageSize: config.pageSize,
-    orientation: config.orientation,
-    pagesToPrint: config.pagesToPrint,
-    sided: config.sided,
-    copies: config.copies.toString(),
-    remarks: config.remarks,
-    specificRange: config.specificRange,
-  }).toString();
+  useEffect(() => {
+    setConfig((prevConfig: Config) => ({
+      ...prevConfig,
+      ...initialConfig,
+    }));
+  }, [initialConfig]);
 
-  router.push(`/order-summary?${query}`);
-};
+  useEffect(() => {
+    if (selectedFile.type === 'application/pdf') {
+      const fileURL = URL.createObjectURL(selectedFile);
+      getDocument({ url: fileURL }).promise.then((pdf) => {
+        setTotalPages(pdf.numPages);
+      }).catch((error) => {
+        console.error('Error getting document:', error);
+      });
+    }
+  }, [selectedFile]);
+
+  const calculateTotalPrice = () => {
+    const pricePerPage = config.color === 'bw' ? 2 : 5;
+    let pages = totalPages;
+
+    if (config.pagesToPrint === 'specific' && config.specificRange) {
+      const ranges: [number, number?][] = config.specificRange.split(',').map(range => range.split('-').map(Number) as [number, number?]);
+      pages = ranges.reduce((total, [start, end]) => total + (end ? end - start + 1 : 1), 0);
+    }
+
+    return pages * pricePerPage * config.copies;
+  };
+
+  const validateRange = (specificRange: string): boolean => {
+    const regex = /^(\d+(-\d+)?(, \d+(-\d+)?)*|\d+)$/;
+    return regex.test(specificRange);
+  };
+
+  const handleSave = () => {
+    if (config.pagesToPrint === 'specific' && !validateRange(config.specificRange)) {
+      alert('Invalid range format! Please use the format "1-5, 8, 11-13".');
+      return;
+    }
+
+    const totalPrice = calculateTotalPrice();
+    if (isNaN(totalPrice)) {
+      alert('Error calculating total price. Please check your configuration.');
+      return;
+    }
+    onSave({ ...config, totalPrice });
+  };
 
   return (
     <div className="max-w-2xl mx-auto bg-gray-900 text-white p-6 rounded-lg">
@@ -94,21 +93,13 @@ const handleSave = () => {
           <h2 className="font-semibold mb-4">Color Mode</h2>
           <div className="flex gap-4">
             <button
-              className={`px-4 py-2 rounded-lg ${
-                config.color === 'bw' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'border border-gray-600 hover:border-gray-400'
-              }`}
+              className={`px-4 py-2 rounded-lg ${config.color === 'bw' ? 'bg-gray-700 text-white' : 'border border-gray-600 hover:border-gray-400'}`}
               onClick={() => setConfig({ ...config, color: 'bw' })}
             >
               Black & White
             </button>
             <button
-              className={`px-4 py-2 rounded-lg ${
-                config.color === 'color' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'border border-gray-600 hover:border-gray-400'
-              }`}
+              className={`px-4 py-2 rounded-lg ${config.color === 'color' ? 'bg-gray-700 text-white' : 'border border-gray-600 hover:border-gray-400'}`}
               onClick={() => setConfig({ ...config, color: 'color' })}
             >
               Color
@@ -135,21 +126,13 @@ const handleSave = () => {
           <h2 className="font-semibold mb-4">Orientation</h2>
           <div className="flex gap-4">
             <button
-              className={`px-4 py-2 rounded-lg ${
-                config.orientation === 'portrait' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'border border-gray-600 hover:border-gray-400'
-              }`}
+              className={`px-4 py-2 rounded-lg ${config.orientation === 'portrait' ? 'bg-gray-700 text-white' : 'border border-gray-600 hover:border-gray-400'}`}
               onClick={() => setConfig({ ...config, orientation: 'portrait' })}
             >
               Portrait
             </button>
             <button
-              className={`px-4 py-2 rounded-lg ${
-                config.orientation === 'landscape' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'border border-gray-600 hover:border-gray-400'
-              }`}
+              className={`px-4 py-2 rounded-lg ${config.orientation === 'landscape' ? 'bg-gray-700 text-white' : 'border border-gray-600 hover:border-gray-400'}`}
               onClick={() => setConfig({ ...config, orientation: 'landscape' })}
             >
               Landscape
@@ -162,21 +145,13 @@ const handleSave = () => {
           <h2 className="font-semibold mb-4">Pages to Print</h2>
           <div className="flex gap-4">
             <button
-              className={`px-4 py-2 rounded-lg ${
-                config.pagesToPrint === 'all' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'border border-gray-600 hover:border-gray-400'
-              }`}
+              className={`px-4 py-2 rounded-lg ${config.pagesToPrint === 'all' ? 'bg-gray-700 text-white' : 'border border-gray-600 hover:border-gray-400'}`}
               onClick={() => setConfig({ ...config, pagesToPrint: 'all', specificRange: '' })}
             >
               All Pages
             </button>
             <button
-              className={`px-4 py-2 rounded-lg ${
-                config.pagesToPrint === 'specific' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'border border-gray-600 hover:border-gray-400'
-              }`}
+              className={`px-4 py-2 rounded-lg ${config.pagesToPrint === 'specific' ? 'bg-gray-700 text-white' : 'border border-gray-600 hover:border-gray-400'}`}
               onClick={() => setConfig({ ...config, pagesToPrint: 'specific' })}
             >
               Specific Range
@@ -198,21 +173,13 @@ const handleSave = () => {
           <h2 className="font-semibold mb-4">Print Type</h2>
           <div className="flex gap-4">
             <button
-              className={`px-4 py-2 rounded-lg ${
-                config.sided === 'single' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'border border-gray-600 hover:border-gray-400'
-              }`}
+              className={`px-4 py-2 rounded-lg ${config.sided === 'single' ? 'bg-gray-700 text-white' : 'border border-gray-600 hover:border-gray-400'}`}
               onClick={() => setConfig({ ...config, sided: 'single' })}
             >
               Single Sided
             </button>
             <button
-              className={`px-4 py-2 rounded-lg ${
-                config.sided === 'double' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'border border-gray-600 hover:border-gray-400'
-              }`}
+              className={`px-4 py-2 rounded-lg ${config.sided === 'double' ? 'bg-gray-700 text-white' : 'border border-gray-600 hover:border-gray-400'}`}
               onClick={() => setConfig({ ...config, sided: 'double' })}
             >
               Double Sided
@@ -244,6 +211,11 @@ const handleSave = () => {
             value={config.remarks}
             onChange={(e) => setConfig({ ...config, remarks: e.target.value })}
           />
+        </div>
+
+        {/* Total Price */}
+        <div className="p-4 border border-gray-700 rounded-lg">
+          <h2 className="font-semibold mb-4">Total Price: Rs. {calculateTotalPrice()}</h2>
         </div>
 
         <button

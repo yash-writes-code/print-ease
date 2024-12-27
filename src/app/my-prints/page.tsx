@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState } from 'react';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
@@ -6,12 +6,15 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useRouter } from 'next/navigation';
 
 import PrintConfig from '../print-config/print-config'; // Adjust the path to where your PDFViewer component is
 
 export default function MyPrints() {
   const [files, setFiles] = useState<File[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileConfigs, setFileConfigs] = useState<{ [key: string]: any }>({});
+  const router = useRouter();
 
   const handleFileUpload = (uploadedFiles: FileList) => {
     const newFiles = Array.from(uploadedFiles);
@@ -23,9 +26,33 @@ export default function MyPrints() {
     if (selectedFile === fileToDelete) {
       setSelectedFile(null);
     }
+    const newConfigs = { ...fileConfigs };
+    delete newConfigs[fileToDelete.name];
+    setFileConfigs(newConfigs);
+  };
+
+  const handleConfigSave = (fileName: string, config: any) => {
+    setFileConfigs((prevConfigs) => ({
+      ...prevConfigs,
+      [fileName]: config,
+    }));
+  };
+
+  const handlePrint = () => {
+    const query = new URLSearchParams();
+    Object.keys(fileConfigs).forEach((fileName, index) => {
+      const config = fileConfigs[fileName];
+      query.append(`file${index}`, fileName);
+      query.append(`config${index}`, JSON.stringify(config));
+    });
+    router.push(`/order-summary?${query.toString()}`);
   };
 
   const renderPreview = (file: File) => {
+    if (!file) {
+      return <p className="text-gray-500 p-4">File not found or cannot be loaded.</p>;
+    }
+
     if (file.type === 'application/pdf') {
       const fileURL = URL.createObjectURL(file);
       return (
@@ -82,7 +109,9 @@ export default function MyPrints() {
               key={index}
               className={`flex justify-between items-center cursor-pointer p-4 bg-gray-800 rounded-lg ${selectedFile === file ? "ring-2 ring-blue-500" : ""}`}
             >
-              <span onClick={() => setSelectedFile(file)}>{file.name}</span>
+              <span onClick={() => setSelectedFile(file)}>
+                {file.name} {fileConfigs[file.name] ? "(configured)" : ""}
+              </span>
               <button
                 onClick={() => handleFileDelete(file)}
                 className="text-red-500 hover:text-red-700"
@@ -100,7 +129,11 @@ export default function MyPrints() {
               {renderPreview(selectedFile)}
 
               <div className="mt-4">
-                <PrintConfig />
+                <PrintConfig
+                  selectedFile={selectedFile}
+                  initialConfig={fileConfigs[selectedFile.name] || {}}
+                  onSave={(config) => handleConfigSave(selectedFile.name, config)}
+                />
               </div>
             </div>
           )}
@@ -121,6 +154,15 @@ export default function MyPrints() {
               onChange={(e) => handleFileUpload(e.target.files!)}
               className=" hidden"
             />
+          </div>
+
+          <div className="mt-8">
+            <button
+              onClick={handlePrint}
+              className="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Print
+            </button>
           </div>
         </div>
       )}
