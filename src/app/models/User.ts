@@ -5,7 +5,7 @@ export interface User extends Document {
   name: string;
   email: string;
   image: string;
-  rollNo?: number;
+  rollNo?: string;
 }
 
 const UserSchema: Schema<User> = new Schema({
@@ -27,7 +27,7 @@ const UserSchema: Schema<User> = new Schema({
     type: String,
   },
   rollNo: {
-    type: Number,
+    type: String,
     required: true,
   },
 });
