@@ -12,6 +12,7 @@ export interface PrintDoc extends Document{
     status: string;
     type: string;
     cost: number;
+    createdAt: Date;
 }
 
 const PrintDocSchema: Schema<PrintDoc> = new Schema({
@@ -46,6 +47,11 @@ const PrintDocSchema: Schema<PrintDoc> = new Schema({
     cost: {
         type: Number,
         required: true,
+    },
+    createdAt:{
+        type: Date,
+        default : Date.now(),
+        required:true
     }
 })
 
