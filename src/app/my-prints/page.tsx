@@ -45,6 +45,7 @@ export default function MyPrints() {
       query.append(`file${index}`, fileName);
       query.append(`config${index}`, JSON.stringify(config));
     });
+    
     router.push(`/order-summary?${query.toString()}`);
   };
 
