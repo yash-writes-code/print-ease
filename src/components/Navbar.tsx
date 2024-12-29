@@ -1,7 +1,10 @@
 "use client";
 
 import Link from 'next/link';
+import SignIn from './sign-in';
+
 import { usePathname } from 'next/navigation';
+
 
 export default function NavbarComponent() {
   const pathname = usePathname();
@@ -26,6 +29,10 @@ export default function NavbarComponent() {
             >
               My Prints
             </Link>
+
+    <SignIn></SignIn>
+           
+
           </div>
         </div>
       </div>
