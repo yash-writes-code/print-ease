@@ -6,8 +6,8 @@ import { BackgroundBeamsWithCollision } from '../components/ui/BackgroundBeamsWi
 
 export default function Home() {
   return (
-    <div className="h-screen relative bg-gray-900 text-white min-h-[80vh] flex flex-col items-center justify-center text-center overflow-hidden ">
-      <BackgroundBeamsWithCollision className="w-full h-full z-0">
+    <div className="h-[60vh] w-full relative bg-black text-white min-h-[80vh] flex flex-col items-center justify-center text-center overflow-hidden ">
+      <BackgroundBeamsWithCollision className="w-screen  z-0">
         {/* Add any children elements here if needed */}
         <div className="relative z-10 flex justify-center items-center flex-col">
         <TypewriterEffectSmooth
