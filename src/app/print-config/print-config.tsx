@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getDocument, GlobalWorkerOptions, version as pdfjsVersion } from 'pdfjs-dist';
 
+
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
@@ -21,8 +22,10 @@ type Config = {
 
 export default function PrintConfig({ selectedFile, initialConfig, onSave }: { selectedFile: File, initialConfig: Config, onSave: (config: Config) => void }) {
   const router = useRouter();
+ 
   const [config, setConfig] = useState({
     ...initialConfig,
+    copies: initialConfig.copies || 1, // Ensure copies has a default value
   });
   const [totalPages, setTotalPages] = useState<number>(10);
 
@@ -45,6 +48,9 @@ export default function PrintConfig({ selectedFile, initialConfig, onSave }: { s
   }, [selectedFile]);
 
   const calculateTotalPrice = () => {
+    if (!config.color) {
+      return 0; // Return 0 if color mode is not selected
+    }
     const pricePerPage = config.color === 'bw' ? 2 : 5;
     let pages = totalPages;
 
@@ -62,6 +68,18 @@ export default function PrintConfig({ selectedFile, initialConfig, onSave }: { s
   };
 
   const handleSave = () => {
+    if (
+      !config.color ||
+      !config.pageSize ||
+      !config.orientation ||
+      !config.pagesToPrint ||
+      config.copies === 0 ||
+      !config.sided
+    ) {
+      alert('Please ensure all fields are selected except remarks.');
+      return;
+    }
+
     if (config.pagesToPrint === 'specific' && !validateRange(config.specificRange)) {
       alert('Invalid range format! Please use the format "1-5, 8, 11-13".');
       return;
@@ -76,7 +94,7 @@ export default function PrintConfig({ selectedFile, initialConfig, onSave }: { s
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-gray-900 text-white p-6 rounded-lg">
+    <div className={`max-w-2xl mx-auto p-6 rounded-lg `}>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-semibold">Print Configuration</h1>
         <button
@@ -112,9 +130,10 @@ export default function PrintConfig({ selectedFile, initialConfig, onSave }: { s
           <h2 className="font-semibold mb-4">Page Size</h2>
           <select 
             className="w-full p-2 border border-gray-600 rounded-lg bg-gray-800 text-white"
-            value={config.pageSize}
+            value={config.pageSize || ''}
             onChange={(e) => setConfig({ ...config, pageSize: e.target.value })}
           >
+            <option value="" disabled>Select Page Size</option>
             <option value="a4">A4</option>
             <option value="letter">Letter</option>
             <option value="legal">Legal</option>
@@ -190,15 +209,14 @@ export default function PrintConfig({ selectedFile, initialConfig, onSave }: { s
         {/* Copies */}
         <div className="p-4 border border-gray-700 rounded-lg">
           <h2 className="font-semibold mb-4">Copies</h2>
-          <select 
+          <input
+            type="number"
             className="w-full p-2 border border-gray-600 rounded-lg bg-gray-800 text-white"
-            value={config.copies}
-            onChange={(e) => setConfig({ ...config, copies: Number(e.target.value) })}
-          >
-            {[...Array(10)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>{i + 1}</option>
-            ))}
-          </select>
+            value={config.copies || ''}
+            onChange={(e) => setConfig({ ...config, copies: e.target.value ? Number(e.target.value) : 0 })}
+            min="1"
+            disabled={!config.color} // Disable input if color mode is not selected
+          />
         </div>
 
         {/* Remarks */}

@@ -7,6 +7,7 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useRouter } from 'next/navigation';
+import { FileUpload } from '../../components/ui/FileUpload'; // Adjust the path to where your FileUpload component is
 
 import PrintConfig from '../print-config/print-config'; // Adjust the path to where your PDFViewer component is
 
@@ -14,10 +15,10 @@ export default function MyPrints() {
   const [files, setFiles] = useState<File[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileConfigs, setFileConfigs] = useState<{ [key: string]: any }>({});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleFileUpload = (uploadedFiles: FileList) => {
-    const newFiles = Array.from(uploadedFiles);
+  const handleFileUpload = (newFiles: File[]) => {
     setFiles([...files, ...newFiles]);
   };
 
@@ -40,13 +41,32 @@ export default function MyPrints() {
 
   const handlePrint = () => {
     const query = new URLSearchParams();
+    let allConfigured = true;
+
     Object.keys(fileConfigs).forEach((fileName, index) => {
       const config = fileConfigs[fileName];
+      if (!config || Object.keys(config).length === 0) {
+        allConfigured = false;
+      }
       query.append(`file${index}`, fileName);
       query.append(`config${index}`, JSON.stringify(config));
     });
-    
+
+    if (!allConfigured) {
+      setErrorMessage("One or more files are not configured. Please configure all files before printing.");
+      return;
+    }
+
     router.push(`/order-summary?${query.toString()}`);
+  };
+
+  const handleFileClick = (file: File) => {
+    if (selectedFile === file) {
+      setSelectedFile(null);
+    } else {
+      setSelectedFile(file);
+    }
+    setErrorMessage(null);
   };
 
   const renderPreview = (file: File) => {
@@ -77,23 +97,12 @@ export default function MyPrints() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-gray-900 text-white p-6">
-      <h1 className="text-3xl text-center font-semibold mb-10">My Prints</h1>
+    <div className={`bg-gray-900 text-white max-w-2xl mx-auto p-6`}>
+      <h1 className="text-4xl text-center font-semibold mb-10">My Prints</h1>
 
       {files.length === 0 && (
         <div className="flex justify-center items-center mb-4">
-          <label htmlFor="file-upload" className="cursor-pointer flex items-center gap-2 text-gray-400 hover:text-gray-200">
-            <AddIcon />
-            <span>Add Files</span>
-          </label>
-          <input
-            id="file-upload"
-            type="file"
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            multiple
-            onChange={(e) => handleFileUpload(e.target.files!)}
-            className="hidden"
-          />
+          <FileUpload onChange={handleFileUpload} />
         </div>
       )}
 
@@ -110,7 +119,7 @@ export default function MyPrints() {
               key={index}
               className={`flex justify-between items-center cursor-pointer p-4 bg-gray-800 rounded-lg ${selectedFile === file ? "ring-2 ring-blue-500" : ""}`}
             >
-              <span onClick={() => setSelectedFile(file)}>
+              <span onClick={() => handleFileClick(file)}>
                 {file.name} {fileConfigs[file.name] ? "(configured)" : ""}
               </span>
               <button
@@ -142,7 +151,7 @@ export default function MyPrints() {
           <div className="mt-8">
             <button
               onClick={() => document.getElementById('file-upload')?.click()}
-              className=" w-full bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-600 transition-colors flex justify-center items-center gap-2"
+              className="w-full bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-600 transition-colors flex justify-center items-center gap-2"
             >
               <AddIcon />
               Upload More Files
@@ -152,10 +161,16 @@ export default function MyPrints() {
               type="file"
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               multiple
-              onChange={(e) => handleFileUpload(e.target.files!)}
-              className=" hidden"
+              onChange={(e) => handleFileUpload(Array.from(e.target.files!))}
+              className="hidden"
             />
           </div>
+
+          {errorMessage && (
+            <div className="mt-4 p-4 border border-red-700 rounded-lg">
+              <h2 className="font-semibold text-red-500">{errorMessage}</h2>
+            </div>
+          )}
 
           <div className="mt-8">
             <button

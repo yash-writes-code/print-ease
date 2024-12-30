@@ -11,9 +11,9 @@ export default function SignIn() {
       {session ? (
         <div className="flex space-x-2">
           <Image
-            src={session.user?.image}
-            width={50}
-            height={50}
+            src={session.user?.image || "/default-image.png"}
+            width={30}
+            height={30}
             alt="Name"
             className="rounded-full"
           ></Image>
