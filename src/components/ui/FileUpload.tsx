@@ -1,8 +1,12 @@
+'use client';
+
 import { cn } from "@/lib/utils";
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { IconUpload } from "@tabler/icons-react";
 import { useDropzone } from "react-dropzone";
+import Swal from 'sweetalert2';
+import 'sweetalert2/src/sweetalert2.scss';
 
 const mainVariant = {
   initial: {
@@ -34,8 +38,28 @@ export const FileUpload = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (newFiles: File[]) => {
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    onChange && onChange(newFiles);
+    const validFiles = newFiles.filter(file => 
+      file.type === 'application/pdf' || 
+      file.type === 'image/jpeg' || 
+      file.type === 'image/png' || 
+      file.type.includes('wordprocessingml')
+    );
+
+    const duplicateFiles = validFiles.filter(file => 
+      files.some(existingFile => existingFile.name === file.name)
+    );
+
+    if (duplicateFiles.length > 0) {
+      Swal.fire('Error', 'File Already Uploaded', 'error');
+      return;
+    }
+
+    if (validFiles.length !== newFiles.length) {
+      Swal.fire('Error', 'Invalid Format. Only PDF, JPG, and Word files are allowed.', 'error');
+    }
+
+    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+    onChange && onChange(validFiles);
   };
 
   const handleClick = () => {
@@ -62,6 +86,7 @@ export const FileUpload = ({
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
+          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />
@@ -69,8 +94,8 @@ export const FileUpload = ({
           
         </div>
         <div className="flex flex-col items-center justify-center">
-          <p className="relative z-20 font-sans font-bold text-neutral-700 dark:text-neutral-300 text-2xl">
-            Upload file
+          <p className="text-slate-500 relative z-20 font-sans font-bold  dark:text-neutral-300 text-2xl">
+            Upload File
           </p>
           <p className="relative z-20 font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
             Drag or drop your files here or click to upload
@@ -82,7 +107,7 @@ export const FileUpload = ({
                   key={"file" + idx}
                   layoutId={idx === 0 ? "file-upload" : "file-upload-" + idx}
                   className={cn(
-                    "relative overflow-hidden z-40 bg-white dark:bg-neutral-900 flex flex-col items-start justify-start md:h-24 p-4 mt-4 w-full mx-auto rounded-md",
+                    "relative overflow-hidden z-40 bg-white dark:bg-gray-900 flex flex-col items-start justify-start md:h-24 p-4 mt-4 w-full mx-auto rounded-md",
                     "shadow-sm"
                   )}
                 >
@@ -100,11 +125,10 @@ export const FileUpload = ({
                       animate={{ opacity: 1 }}
                       layout
                       className="rounded-lg px-2 py-1 w-fit flex-shrink-0 text-sm text-neutral-600 dark:bg-neutral-800 dark:text-white shadow-input"
-                    >
+                    ></motion.p>
                       {(file.size / (1024 * 1024)).toFixed(2)} MB
-                    </motion.p>
                   </div>
-
+                
                   <div className="flex text-sm md:flex-row flex-col items-start md:items-center w-full mt-2 justify-between text-neutral-600 dark:text-neutral-400">
                     <motion.p
                       initial={{ opacity: 0 }}
@@ -114,7 +138,7 @@ export const FileUpload = ({
                     >
                       {file.type}
                     </motion.p>
-
+                
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -125,6 +149,7 @@ export const FileUpload = ({
                     </motion.p>
                   </div>
                 </motion.div>
+                
               ))}
             {!files.length && (
               <motion.div

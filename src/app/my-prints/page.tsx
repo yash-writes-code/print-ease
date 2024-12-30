@@ -8,6 +8,9 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useRouter } from 'next/navigation';
 import { FileUpload } from '../../components/ui/FileUpload'; // Adjust the path to where your FileUpload component is
+import Swal from 'sweetalert2';
+import 'sweetalert2/src/sweetalert2.scss';
+import PrintIcon from '@mui/icons-material/Print';
 
 import PrintConfig from '../print-config/print-config'; // Adjust the path to where your PDFViewer component is
 
@@ -19,7 +22,31 @@ export default function MyPrints() {
   const router = useRouter();
 
   const handleFileUpload = (newFiles: File[]) => {
-    setFiles([...files, ...newFiles]);
+    const validFiles = newFiles.filter(file => 
+      file.type === 'application/pdf' || 
+      file.type === 'image/jpeg' || 
+      file.type === 'image/png' || 
+      file.type.includes('wordprocessingml')
+    );
+
+    const duplicateFiles = validFiles.filter(file => 
+      files.some(existingFile => existingFile.name === file.name)
+    );
+
+    if (duplicateFiles.length > 0) {
+      Swal.fire('Error', 'File Already Uploaded', 'error');
+      return;
+    }
+
+    if (validFiles.length !== newFiles.length) {
+      Swal.fire('Error', 'Invalid Format. Only PDF, JPG, and Word files are allowed.', 'error');
+      return;
+    }
+
+    setFiles([...files, ...validFiles]);
+    Swal.fire('Success', 'File Uploaded', 'success').then(() => {
+      window.scrollTo(0, 0);
+    });
   };
 
   const handleFileDelete = (fileToDelete: File) => {
@@ -43,17 +70,17 @@ export default function MyPrints() {
     const query = new URLSearchParams();
     let allConfigured = true;
 
-    Object.keys(fileConfigs).forEach((fileName, index) => {
-      const config = fileConfigs[fileName];
+    files.forEach((file, index) => {
+      const config = fileConfigs[file.name];
       if (!config || Object.keys(config).length === 0) {
         allConfigured = false;
       }
-      query.append(`file${index}`, fileName);
+      query.append(`file${index}`, file.name);
       query.append(`config${index}`, JSON.stringify(config));
     });
 
     if (!allConfigured) {
-      setErrorMessage("One or more files are not configured. Please configure all files before printing.");
+      Swal.fire('Error', 'Please configure your files', 'error');
       return;
     }
 
@@ -133,8 +160,8 @@ export default function MyPrints() {
 
           {selectedFile && (
             <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-4">
-                Preview: {selectedFile.name}
+              <h2 className="text-xl font-semibold mb-4 sm:text-xs md:text-lg">
+               <span className='text-gray-500'> Preview: </span>{selectedFile.name}
               </h2>
               {renderPreview(selectedFile)}
 
@@ -161,7 +188,34 @@ export default function MyPrints() {
               type="file"
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               multiple
-              onChange={(e) => handleFileUpload(Array.from(e.target.files!))}
+              onChange={(e) => {
+                const newFiles = Array.from(e.target.files!);
+                const validFiles = newFiles.filter(file => 
+                  file.type === 'application/pdf' || 
+                  file.type === 'image/jpeg' || 
+                  file.type === 'image/png' || 
+                  file.type.includes('wordprocessingml')
+                );
+
+                const duplicateFiles = validFiles.filter(file => 
+                  files.some(existingFile => existingFile.name === file.name)
+                );
+
+                if (duplicateFiles.length > 0) {
+                  Swal.fire('Error', 'File Already Uploaded', 'error');
+                  return;
+                }
+
+                if (validFiles.length !== newFiles.length) {
+                  Swal.fire('Error', 'Invalid Format. Only PDF, JPG, and Word files are allowed.', 'error');
+                  return;
+                }
+
+                setFiles([...files, ...validFiles]);
+                Swal.fire('Success', 'File Uploaded', 'success').then(() => {
+                  window.scrollTo(0, 0);
+                });
+              }}
               className="hidden"
             />
           </div>
@@ -172,13 +226,15 @@ export default function MyPrints() {
             </div>
           )}
 
-          <div className="mt-8">
-            <button
-              onClick={handlePrint}
-              className="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              Print
-            </button>
+          <div className="mt-8 ">
+          
+        
+        <button onClick={handlePrint} className="w-full inline-flex h-12 animate-shimmer items-center justify-center rounded-md border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] px-6 font-medium text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 gap-2">
+          <PrintIcon />
+          Print
+        </button>
+  
+      
           </div>
         </div>
       )}

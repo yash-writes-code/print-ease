@@ -62,7 +62,9 @@ export default function OrderSummary() {
     );
   };
 
-  const totalPrice = orderDetails.reduce((sum, details) => sum + details.totalPrice, 0);
+  const totalPrice = orderDetails.reduce((sum, details) => {
+    return sum + details.totalPrice;
+  }, 0);
 
   return (
     <div className={`max-w-2xl mx-auto p-6 rounded-lg`}>
@@ -110,21 +112,6 @@ export default function OrderSummary() {
   );
 }
 
-function getTotalPagesFromFile(fileURL: string): Promise<number> {
-  return new Promise((resolve, reject) => {
-    getDocument({ url: fileURL })
-      .promise.then((pdf) => {
-        resolve(pdf.numPages);
-      })
-      .catch((error) => {
-        console.error("Error getting document:", error);
-        reject(new Error("MissingPDFException"));
-      });
-  });
-}
 
-function includes(str: string, substr: string): boolean {
-  return str.indexOf(substr) !== -1;
-}
 
 

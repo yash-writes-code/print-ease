@@ -30,6 +30,7 @@
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
     "react-pdf": "^9.2.1",
+    "sweetalert2": "^11.15.3",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
