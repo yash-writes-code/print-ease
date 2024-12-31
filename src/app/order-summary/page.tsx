@@ -74,18 +74,18 @@ export default function OrderSummary() {
         {orderDetails.map((details, index) => (
           <BackgroundGradient key={index} className="p-4 bg-gray-900 rounded-lg cursor-pointer" containerClassName="p-2 space-y-1 rounded-lg" borderOnly>
             <div onClick={() => setSelectedFileIndex(selectedFileIndex === index ? null : index)}>
-              <h2 className="font-semibold mb-2">File: {details.file}</h2>
-              <h2 className="font-semibold mb-2">Total Price: Rs. {details.totalPrice}</h2>
+              <h2 className="font-semibold mb-2"><span className="text-gray-500">File:</span> {details.file}</h2>
+              <h2 className="font-semibold mb-2"><span className="text-gray-500">Total Price: Rs.</span> {details.totalPrice}</h2>
 
               {selectedFileIndex === index && isValidOrder(details) && (
                 <div className="mt-4 space-y-4">
-                  <h2 className="font-semibold">Color Mode: {details.color === "bw" ? "Black & White" : "Color"}</h2>
-                  <h2 className="font-semibold">Page Size: {details.pageSize}</h2>
-                  <h2 className="font-semibold">Orientation: {details.orientation}</h2>
-                  <h2 className="font-semibold">Pages to Print: {details.pagesToPrint}</h2>
-                  <h2 className="font-semibold">Print Type: {details.sided === "single" ? "Single Sided" : "Double Sided"}</h2>
-                  <h2 className="font-semibold">Copies: {details.copies}</h2>
-                  <h2 className="font-semibold">Remarks: {details.remarks}</h2>
+                  <h2 className="font-semibold"><span className="text-gray-500">Color Mode:</span> {details.color === "bw" ? "Black & White" : "Color"}</h2>
+                  <h2 className="font-semibold"><span className="text-gray-500">Page Size:</span> {details.pageSize}</h2>
+                  <h2 className="font-semibold"><span className="text-gray-500">Orientation:</span> {details.orientation}</h2>
+                  <h2 className="font-semibold"><span className="text-gray-500">Pages to Print:</span> {details.pagesToPrint}</h2>
+                  <h2 className="font-semibold"><span className="text-gray-500">Print Type:</span> {details.sided === "single" ? "Single Sided" : "Double Sided"}</h2>
+                  <h2 className="font-semibold"><span className="text-gray-500">Copies:</span> {details.copies}</h2>
+                  <h2 className="font-semibold"><span className="text-gray-500">Remarks:</span> {details.remarks}</h2>
                 </div>
               )}
 
@@ -100,7 +100,7 @@ export default function OrderSummary() {
       </div>
 
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Total Price for All Files: Rs. {totalPrice}</h2>
+        <h2 className="text-xl font-semibold mb-4"><span className="text-gray-500">Total Price for All Files:</span> Rs. {totalPrice}</h2>
         <button
           onClick={() => router.push("/my-prints")}
           className="w-full bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-600 transition-colors"

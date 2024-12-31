@@ -5,9 +5,11 @@ import SignIn from './sign-in';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
+import { useSession } from 'next-auth/react';
 
 export default function NavbarComponent() {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [isMounted, setIsMounted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -38,8 +40,8 @@ export default function NavbarComponent() {
               Home
             </Link>
             <Link 
-              href="/my-prints"
-              className={`${pathname === '/my-prints' ? 'text-blue-600' : 'text-gray-600'} hover:text-blue-600 transition-colors`}
+              href={session ? "/my-prints" : "#"}
+              className={`${pathname === '/my-prints' ? 'text-blue-600' : 'text-gray-600'} ${!session ? 'cursor-not-allowed opacity-50' : 'hover:text-blue-600 transition-colors'}`}
             >
               My Prints
             </Link>
@@ -62,8 +64,8 @@ export default function NavbarComponent() {
             Home
           </Link>
           <Link 
-            href="/my-prints"
-            className={`${pathname === '/my-prints' ? 'text-blue-600' : 'text-gray-600'} block py-2 hover:text-blue-600 transition-colors`}
+            href={session ? "/my-prints" : "#"}
+            className={`${pathname === '/my-prints' ? 'text-blue-600' : 'text-gray-600'} ${!session ? 'cursor-not-allowed opacity-50' : 'hover:text-blue-600 transition-colors'}`}
             onClick={toggleMenu}
           >
             My Prints
