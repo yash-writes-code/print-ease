@@ -5,9 +5,9 @@ import { useSession, signIn } from 'next-auth/react';
 export default function StartButton() {
   const { data: session } = useSession();
 
-  const handleStartClick = () => {
+  const handleStartClick = async () => {
     if (!session) {
-      signIn();
+      await signIn('google');
     } else {
       window.location.href = '/my-prints';
     }

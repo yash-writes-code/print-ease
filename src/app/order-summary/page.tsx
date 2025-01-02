@@ -8,6 +8,12 @@ import { BackgroundGradient } from '../../components/ui/BackgroundGradient';
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 export default function OrderSummary() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -66,6 +72,60 @@ export default function OrderSummary() {
     return sum + details.totalPrice;
   }, 0);
 
+  const loadRazorpayScript = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+        resolve(); // Script already loaded
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load Razorpay SDK"));
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayment = async () => {
+    try {
+      await loadRazorpayScript();
+      console.log("Razorpay SDK loaded successfully");
+
+      if (typeof window.Razorpay !== "function") {
+        console.error("Razorpay SDK not initialized. Check script loading.");
+        return;
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
+        amount: totalPrice * 100, // Convert to paise
+        currency: "INR",
+        name: "InstaPrint",
+        description: "Order Payment",
+        handler: function (response: any) {
+          alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
+        },
+        prefill: {
+          name: "Your Name",
+          email: "your.email@example.com",
+          contact: "9999999999",
+        },
+        notes: {
+          address: "InstaPrint Office",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Error loading Razorpay SDK:", error);
+      alert("Failed to initialize payment. Please try again.");
+    }
+  };
+
   return (
     <div className={`max-w-2xl mx-auto p-6 rounded-lg`}>
       <h1 className="text-2xl font-semibold mb-8">Order Summary</h1>
@@ -101,6 +161,12 @@ export default function OrderSummary() {
 
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4"><span className="text-gray-500">Total Price for All Files:</span> Rs. {totalPrice}</h2>
+        <button
+          onClick={handlePayment}
+          className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 transition-colors mb-4"
+        >
+          Pay with UPI
+        </button>
         <button
           onClick={() => router.push("/my-prints")}
           className="w-full bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-600 transition-colors"
