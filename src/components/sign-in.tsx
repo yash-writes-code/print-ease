@@ -2,10 +2,16 @@
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function SignIn() {
   const { data: session } = useSession();
-  console.log(session);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
+
   return (
     <div>
       {session ? (
@@ -17,7 +23,7 @@ export default function SignIn() {
             alt="Name"
             className="rounded-full"
           ></Image>
-          <button onClick={() => signOut()}>Sign Out</button>
+          <button onClick={handleSignOut}>Sign Out</button>
         </div>
       ) : (
         <button onClick={() => signIn("google")}>Sign In with Google</button>

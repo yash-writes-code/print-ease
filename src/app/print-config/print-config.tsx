@@ -37,9 +37,10 @@ export default function PrintConfig({
 }) {
   const router = useRouter();
 
-  const [config, setConfig] = useState({
+  const [config, setConfig] = useState<Config>({
     ...initialConfig,
     copies: initialConfig.copies || 1, // Ensure copies has a default value
+    specificRange: initialConfig.specificRange || "", // Ensure specificRange has a default value
   });
   const [totalPages, setTotalPages] = useState<number>(10);
 
@@ -89,7 +90,21 @@ export default function PrintConfig({
 
   const validateRange = (specificRange: string): boolean => {
     const regex = /^(\d+(-\d+)?(, \d+(-\d+)?)*|\d+)$/;
-    return regex.test(specificRange);
+    if (!regex.test(specificRange)) {
+      return false;
+    }
+
+    const ranges: [number, number?][] = specificRange
+      .split(",")
+      .map((range) => range.split("-").map(Number) as [number, number?]);
+
+    for (const [start, end] of ranges) {
+      if (start < 1 || (end && end > totalPages)) {
+        return false;
+      }
+    }
+
+    return true;
   };
 
   const handleSave = () => {
@@ -115,7 +130,7 @@ export default function PrintConfig({
     ) {
       Swal.fire(
         "Error",
-        'Invalid range format! Please use the format "1-5, 8, 11-13".',
+        `Invalid range format or range out of bounds! Ensure the range is within 1 to ${totalPages}.`,
         "error"
       );
       return;
@@ -293,7 +308,7 @@ export default function PrintConfig({
           <input
             type="number"
             className="w-full p-2 border border-gray-600 rounded-lg bg-gray-800 text-white"
-            value={config.copies || ""}
+            value={config.copies}
             onChange={(e) =>
               setConfig({
                 ...config,
