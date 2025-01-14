@@ -11,7 +11,7 @@ import { FileUpload } from '../../components/ui/FileUpload'; // Adjust the path 
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import PrintIcon from '@mui/icons-material/Print';
-
+import useFileStore from '@/store/filesStore';
 import PrintConfig from '../print-config/print-config'; // Adjust the path to where your PDFViewer component is
 
 export default function MyPrints() {
@@ -66,6 +66,7 @@ export default function MyPrints() {
     }));
   };
 
+  //current handle print function makes us to lose file data
   const handlePrint = () => {
     const query = new URLSearchParams();
     let allConfigured = true;
@@ -76,6 +77,7 @@ export default function MyPrints() {
         allConfigured = false;
       }
       query.append(`file${index}`, file.name);
+
       query.append(`config${index}`, JSON.stringify(config));
     });
 

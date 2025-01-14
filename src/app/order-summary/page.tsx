@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getDocument, GlobalWorkerOptions, version as pdfjsVersion } from "pdfjs-dist";
 import { BackgroundGradient } from '../../components/ui/BackgroundGradient';
-
+import axios from "axios";
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
@@ -102,8 +102,23 @@ export default function OrderSummary() {
         currency: "INR",
         name: "InstaPrint",
         description: "Order Payment",
-        handler: function (response: any) {
+        handler: async function (response: any) {
+          //logic for backend upload
+           // Prepare the data to send to your API
+           const data = {
+            paymentId: response.razorpay_payment_id,
+            orderDetails, // Includes files and configs
+          };
+
+          // Send the data to your API
+          const apiResponse = await axios.post("/api/file_upload", data);
+          console.log("API Response:", apiResponse.data);
+
           alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
+          console.log(orderDetails);
+        
+          
+          
         },
         prefill: {
           name: "Your Name",

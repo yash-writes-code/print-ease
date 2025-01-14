@@ -15,11 +15,6 @@ export interface File extends Document{
 }
 
 const FileSchema: Schema<File> = new Schema({
-    fileID: {
-        type: String,
-        required: true,
-        unique: true
-    },
     userID: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", 

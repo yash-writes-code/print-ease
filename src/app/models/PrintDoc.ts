@@ -13,14 +13,10 @@ export interface PrintDoc extends Document{
     type: string;
     cost: number;
     createdAt: Date;
+    paymentId:string;
 }
 
 const PrintDocSchema: Schema<PrintDoc> = new Schema({
-    docID: {
-        type: String,
-        required: true,
-        unique: true
-    },
     userID: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", 
@@ -52,6 +48,10 @@ const PrintDocSchema: Schema<PrintDoc> = new Schema({
         type: Date,
         default : Date.now(),
         required:true
+    },
+    paymentId:{
+        type:String,
+        required : true
     }
 })
 

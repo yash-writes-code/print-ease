@@ -10,21 +10,11 @@ import {
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import SaveIcon from '@mui/icons-material/Save';
-
+import { Config } from "@/interfaces";
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
-type Config = {
-  color: string;
-  pageSize: string;
-  orientation: string;
-  pagesToPrint: string;
-  sided: string;
-  copies: number;
-  remarks: string;
-  specificRange: string;
-  totalPrice: number;
-};
+
 
 export default function PrintConfig({
   selectedFile,
