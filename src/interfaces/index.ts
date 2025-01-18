@@ -1,13 +1,13 @@
 export interface Config {
-    color: string;
+    color: "color" | "b&w";
     pageSize: string;
-    orientation: string;
-    pagesToPrint: string;
-    sided: string;
+    orientation: "portrait" | "landscape";
+    pagesToPrint: "all" | "specific";
+    sided: "single" | "double";
     copies: number;
     remarks: string;
     specificRange: string;
-    totalPrice: number;
+    totalPrice:number;
   };
 
 export interface FileWithConfig{

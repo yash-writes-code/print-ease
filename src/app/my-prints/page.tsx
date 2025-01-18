@@ -15,6 +15,8 @@ import useFileStore from '@/store/filesStore';
 import PrintConfig from '../print-config/print-config'; // Adjust the path to where your PDFViewer component is
 
 export default function MyPrints() {
+  const store = useFileStore();
+
   const [files, setFiles] = useState<File[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileConfigs, setFileConfigs] = useState<{ [key: string]: any }>({});
@@ -68,7 +70,7 @@ export default function MyPrints() {
 
   //current handle print function makes us to lose file data
   const handlePrint = () => {
-    const query = new URLSearchParams();
+   
     let allConfigured = true;
 
     files.forEach((file, index) => {
@@ -76,17 +78,20 @@ export default function MyPrints() {
       if (!config || Object.keys(config).length === 0) {
         allConfigured = false;
       }
-      query.append(`file${index}`, file.name);
-
-      query.append(`config${index}`, JSON.stringify(config));
+      else{
+        //adding the current file to the global state
+        store.addFile(file,config);
+      }
+      
     });
 
     if (!allConfigured) {
       Swal.fire('Error', 'Please configure your files', 'error');
+      store.clearAll();
       return;
     }
 
-    router.push(`/order-summary?${query.toString()}`);
+    router.push(`/order-summary`);
   };
 
   const handleFileClick = (file: File) => {

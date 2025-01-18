@@ -58,7 +58,7 @@ export default function PrintConfig({
     if (!config.color) {
       return 0; // Return 0 if color mode is not selected
     }
-    const pricePerPage = config.color === "bw" ? 2 : 5;
+    const pricePerPage = config.color === "b&w" ? 2 : 8;
     let pages = totalPages;
 
     if (config.pagesToPrint === "specific" && config.specificRange) {
@@ -160,11 +160,11 @@ export default function PrintConfig({
           <div className="flex gap-4">
             <button
               className={`px-4 py-2 rounded-lg ${
-                config.color === "bw"
+                config.color === "b&w"
                   ? "bg-gray-700 text-white"
                   : "border border-gray-600 hover:border-gray-400"
               }`}
-              onClick={() => setConfig({ ...config, color: "bw" })}
+              onClick={() => setConfig({ ...config, color: "b&w" })}
             >
               Black & White
             </button>

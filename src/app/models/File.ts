@@ -1,16 +1,10 @@
 
-import mongoose, {Schema, Document} from "mongoose";
+import mongoose, {Schema} from "mongoose";
+import { Config } from "@/interfaces";
 
 
-
-export interface File extends Document{
-    fileID: string;
+export interface File extends Config{
     userID: mongoose.Types.ObjectId;
-    name: string;
-    color: string;
-    orientation: string;
-    noOfCopies: number;
-    remarks: string;
     link: string;
 }
 
@@ -18,10 +12,6 @@ const FileSchema: Schema<File> = new Schema({
     userID: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", 
-        required: true,
-    },
-    name: {
-        type: String,
         required: true,
     },
     color: {
@@ -32,7 +22,11 @@ const FileSchema: Schema<File> = new Schema({
         type: String,
         required: true,
     },
-    noOfCopies: {
+    sided:{
+        type:String,
+        required:true,
+    },
+    copies: {
         type: Number,
         required: true,
     },
