@@ -14,6 +14,7 @@ const useFileStore = create<FilesStore>((set) => ({
   filesWithConfigs: [],
 
   addFile: (file, config) => {
+  
     set((state) => ({
       filesWithConfigs: [...state.filesWithConfigs, { file, config }]
     }));
