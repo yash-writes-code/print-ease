@@ -2,12 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { GlobalWorkerOptions, version as pdfjsVersion } from "pdfjs-dist";
+import {
+  getDocument,
+  GlobalWorkerOptions,
+  version as pdfjsVersion,
+} from "pdfjs-dist";
 import { BackgroundGradient } from "../../components/ui/BackgroundGradient";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import Swal from "sweetalert2";
+import "sweetalert2/src/sweetalert2.scss";
+import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import axios from "axios";
 import useFileStore from "@/store/filesStore";
 import { Config } from "@/interfaces";
-import { useSession } from 'next-auth/react';
+import { useSession } from "next-auth/react";
+
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
@@ -18,16 +28,17 @@ declare global {
 }
 
 export default function OrderSummary() {
-
   const router = useRouter();
   const store = useFileStore();
   const { data: session } = useSession();
 
-  
+  const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(
+    null
+  );
+
   // Get filesWithConfigs from Zustand
   const filesWithConfigs = store.filesWithConfigs;
 
-  
   const isValidOrder = (details: Config) => {
     return (
       details.color &&
@@ -45,7 +56,11 @@ export default function OrderSummary() {
 
   const loadRazorpayScript = (): Promise<void> => {
     return new Promise((resolve, reject) => {
-      if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+      if (
+        document.querySelector(
+          'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+        )
+      ) {
         resolve(); // Script already loaded
         return;
       }
@@ -74,11 +89,12 @@ export default function OrderSummary() {
         name: "InstaPrint",
         description: "Order Payment",
         handler: async function (response: any) {
-      
+          console.log(response);
+
           // Prepare the data to send to your API
           const formData = new FormData();
-
           formData.append("paymentId", response.razorpay_payment_id);
+
           filesWithConfigs.forEach((fileWithConfig, index) => {
             formData.append(`file_${index}`, fileWithConfig.file); // Append the actual file
             formData.append(
@@ -86,15 +102,19 @@ export default function OrderSummary() {
               JSON.stringify(fileWithConfig.config) // Serialize the config
             );
           });
-         
-          formData.append("user_id",session!.user!.id!);
-        
+
+          formData.append("user_id", session!.user!.id!);
 
           // Send the data to your API
           const apiResponse = await axios.post("/api/file_upload", formData);
           console.log("API Response:", apiResponse.data);
 
-          alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
+          Swal.fire("Success", "Payment successful", "success").then(() => {
+            const query = new URLSearchParams({
+              orderDetails: JSON.stringify(filesWithConfigs),
+            }).toString();
+            router.push(`/order-history?${query}`);
+          });
         },
         prefill: {
           name: "Your Name",
@@ -113,29 +133,68 @@ export default function OrderSummary() {
       rzp.open();
     } catch (error) {
       console.error("Error loading Razorpay SDK:", error);
-      alert("Failed to initialize payment. Please try again.");
+      Swal.fire("Error", "Failed to load payment gateway", "error");
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 rounded-lg">
+    <div
+      className={`mt-[100px] max-w-2xl mx-auto p-6 rounded-lg bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-200`}
+    >
       <h1 className="text-2xl font-semibold mb-8">Order Summary</h1>
 
       <div className="space-y-4">
         {filesWithConfigs.map((item, index) => (
           <BackgroundGradient
             key={index}
-            className="p-4 bg-gray-900 rounded-lg cursor-pointer"
-            containerClassName="p-2 space-y-1 rounded-lg"
+            className="w-full p-4 bg-black dark:bg-gray-700 rounded-xl cursor-pointer"
+            containerClassName="w-full p-2 space-y-1 rounded-lg"
             borderOnly
           >
-            <div>
+            <div
+              onClick={() =>
+                setSelectedFileIndex(selectedFileIndex === index ? null : index)
+              }
+            >
               <h2 className="font-semibold mb-2">
-                <span className="text-gray-500">File:</span> {item.file.name}
+                <span className="text-gray-500 dark:text-gray-400">File:</span>{" "}
+                {item.file.name}
               </h2>
               <h2 className="font-semibold mb-2">
-                <span className="text-gray-500">Total Price: Rs.</span> {item.config.totalPrice}
+                <span className="text-gray-500 dark:text-gray-400">
+                  Total Price: <CurrencyRupeeIcon />
+                </span>{" "}
+                {item.config.totalPrice}
               </h2>
+
+              {selectedFileIndex === index && isValidOrder(item.config) && (
+                <div className="mt-4 space-y-4">
+                  <h2 className="font-semibold">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Color Mode:
+                    </span>{" "}
+                    {item.config.color === "bw" ? "Black & White" : "Color"}
+                  </h2>
+                  <h2 className="font-semibold">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Pages to Print:
+                    </span>{" "}
+                    {item.config.pagesToPrint}
+                  </h2>
+                  <h2 className="font-semibold">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Orientation:
+                    </span>{" "}
+                    {item.config.orientation}
+                  </h2>
+                  <h2 className="font-semibold">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Copies:
+                    </span>{" "}
+                    {item.config.copies}
+                  </h2>
+                </div>
+              )}
             </div>
           </BackgroundGradient>
         ))}
@@ -143,19 +202,25 @@ export default function OrderSummary() {
 
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">
-          <span className="text-gray-500">Total Price for All Files:</span> Rs. {totalPrice}
+          <span className="text-gray-500 dark:text-gray-400">
+            Total Price for All Files:
+          </span>{" "}
+          <CurrencyRupeeIcon /> {totalPrice}
         </h2>
         <button
           onClick={handlePayment}
-          className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 transition-colors mb-4"
+          className="w-full mb-4 inline-flex h-12 animate-shimmer items-center justify-center rounded-md border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] px-6 font-medium text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 gap-2"
         >
-          Pay with UPI
+          Proceed to Payment <ArrowForwardIcon />
         </button>
         <button
           onClick={() => router.push("/my-prints")}
-          className="w-full bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-600 transition-colors"
+          className="w-full relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
         >
-          Go Back to Prints
+          <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
+          <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl gap-2">
+            <ArrowBackIcon /> Go Back to Prints
+          </span>
         </button>
       </div>
     </div>
