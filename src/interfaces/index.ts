@@ -1,6 +1,5 @@
 export interface Config {
     color: "color" | "b&w";
-    pageSize: string;
     orientation: "portrait" | "landscape";
     pagesToPrint: "all" | "specific";
     sided: "single" | "double";

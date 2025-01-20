@@ -33,7 +33,6 @@ export default function OrderSummary() {
       details.color &&
       details.pagesToPrint &&
       details.copies &&
-      details.pageSize &&
       details.orientation &&
       details.sided &&
       details.totalPrice
@@ -92,7 +91,7 @@ export default function OrderSummary() {
         
 
           // Send the data to your API
-          const apiResponse = await axios.post("/api/file2", formData);
+          const apiResponse = await axios.post("/api/file_upload", formData);
           console.log("API Response:", apiResponse.data);
 
           alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);

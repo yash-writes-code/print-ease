@@ -5,7 +5,6 @@ import StoreModel from "./Store";
 
 
 export interface PrintDoc extends Document{
-    docID: string;
     userID: mongoose.Types.ObjectId;
     fileID: mongoose.Types.ObjectId[];
     storeID: mongoose.Types.ObjectId;

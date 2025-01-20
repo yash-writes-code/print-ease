@@ -100,7 +100,6 @@ export default function PrintConfig({
   const handleSave = () => {
     if (
       !config.color ||
-      !config.pageSize ||
       !config.orientation ||
       !config.pagesToPrint ||
       config.copies === 0 ||
@@ -181,22 +180,7 @@ export default function PrintConfig({
           </div>
         </div>
 
-        {/* Page Size */}
-        <div className="p-4 border border-gray-700 rounded-lg">
-          <h2 className="font-semibold mb-4">Page Size</h2>
-          <select
-            className="w-full p-2 border border-gray-600 rounded-lg bg-gray-800 text-white"
-            value={config.pageSize || ""}
-            onChange={(e) => setConfig({ ...config, pageSize: e.target.value })}
-          >
-            <option value="" disabled>
-              Select Page Size
-            </option>
-            <option value="a4">A4</option>
-            <option value="letter">Letter</option>
-            <option value="legal">Legal</option>
-          </select>
-        </div>
+        
 
         {/* Orientation */}
         <div className="p-4 border border-gray-700 rounded-lg">

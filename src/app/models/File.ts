@@ -1,11 +1,9 @@
-
 import mongoose, {Schema} from "mongoose";
 import { Config } from "@/interfaces";
 
-
-export interface File extends Config{
+export interface File extends Omit<Config,'totalPrice'>{
     userID: mongoose.Types.ObjectId;
-    link: string;
+    link: string;  
 }
 
 const FileSchema: Schema<File> = new Schema({
