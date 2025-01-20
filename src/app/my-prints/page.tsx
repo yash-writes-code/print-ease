@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState } from "react";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
@@ -12,10 +13,14 @@ import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import PrintIcon from "@mui/icons-material/Print";
 import { CollageEditor } from "../collageEditor/CollageEditor"; // Adjust the path to where your CollageEditor component is
-
 import PrintConfig from "../print-config/print-config"; // Adjust the path to where your PDFViewer component is
+import useFileStore from '@/store/filesStore';
+ // Adjust the path to where your PDFViewer component is
+
 
 export default function MyPrints() {
+  const store = useFileStore();
+
   const [files, setFiles] = useState<File[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileConfigs, setFileConfigs] = useState<{ [key: string]: any }>({});
@@ -74,8 +79,9 @@ export default function MyPrints() {
     }));
   };
 
+  //current handle print function makes us to lose file data
   const handlePrint = () => {
-    const query = new URLSearchParams();
+   
     let allConfigured = true;
 
     files.forEach((file, index) => {
@@ -83,16 +89,22 @@ export default function MyPrints() {
       if (!config || Object.keys(config).length === 0) {
         allConfigured = false;
       }
-      query.append(`file${index}`, file.name);
-      query.append(`config${index}`, JSON.stringify(config));
+      else{
+        //adding the current file to the global state
+        store.addFile(file,config);
+      }
+      
     });
 
     if (!allConfigured) {
-      Swal.fire("Error", "Please configure your files", "error");
+
+      Swal.fire('Error', 'Please configure your files', 'error');
+      store.clearAll();
+
       return;
     }
 
-    router.push(`/order-summary?${query.toString()}`);
+    router.push(`/order-summary`);
   };
 
   const handleFileClick = (file: File) => {

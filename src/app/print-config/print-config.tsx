@@ -9,23 +9,14 @@ import {
 } from "pdfjs-dist";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import SaveIcon from "@mui/icons-material/Save";
-import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 
+import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
+import SaveIcon from '@mui/icons-material/Save';
+import { Config } from "@/interfaces";
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
-type Config = {
-  color: string;
-  pageSize: string;
-  orientation: string;
-  pagesToPrint: string;
-  sided: string;
-  copies: number;
-  remarks: string;
-  specificRange: string;
-  totalPrice: number;
-};
+
 
 export default function PrintConfig({
   selectedFile,
@@ -77,7 +68,9 @@ export default function PrintConfig({
       return 0; // Return 0 if any required field is not selected
     }
 
+
     const pricePerPage = config.color === "bw" ? 2 : 5;
+
     let pages = totalPages;
 
     if (config.pagesToPrint === "specific" && config.specificRange) {
@@ -119,7 +112,6 @@ export default function PrintConfig({
   const handleSave = () => {
     if (
       !config.color ||
-      !config.pageSize ||
       !config.orientation ||
       !config.pagesToPrint ||
       config.copies === 0 ||
@@ -176,12 +168,13 @@ export default function PrintConfig({
           <h2 className="font-semibold mb-4">Color Mode</h2>
           <div className="flex gap-4">
             <button
-              className={`px-4 py-2 rounded-lg  ${
-                config.color === "bw"
+
+              className={`px-4 py-2 rounded-lg ${
+                config.color === "b&w"
                   ? "bg-gray-700 text-white"
                   : "border border-gray-600 hover:border-gray-400"
               }`}
-              onClick={() => setConfig({ ...config, color: "bw" })}
+              onClick={() => setConfig({ ...config, color: "b&w" })}
             >
               Black & White
             </button>
@@ -198,22 +191,7 @@ export default function PrintConfig({
           </div>
         </div>
 
-        {/* Page Size */}
-        <div className="p-4 border border-gray-700 rounded-lg">
-          <h2 className="font-semibold mb-4">Page Size</h2>
-          <select
-            className="w-full p-2 border border-gray-600 rounded-lg bg-gray-800 text-white"
-            value={config.pageSize || ""}
-            onChange={(e) => setConfig({ ...config, pageSize: e.target.value })}
-          >
-            <option value="" disabled>
-              Select Page Size
-            </option>
-            <option value="a4">A4</option>
-            <option value="letter">Letter</option>
-            <option value="legal">Legal</option>
-          </select>
-        </div>
+        
 
         {/* Orientation */}
         <div className="p-4 border border-gray-700 rounded-lg">

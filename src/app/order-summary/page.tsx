@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   getDocument,
@@ -13,6 +13,10 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
+import axios from "axios";
+import useFileStore from "@/store/filesStore";
+import { Config } from "@/interfaces";
+import { useSession } from "next-auth/react";
 
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
@@ -25,62 +29,29 @@ declare global {
 
 export default function OrderSummary() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  interface Config {
-    color: string;
-    pagesToPrint: string;
-    specificRange?: string;
-    file?: string;
-    copies: number;
-    pageSize: string;
-    orientation: string;
-    sided: string;
-    remarks: string;
-    totalPrice: number;
-  }
-
-  const files: string[] = [];
-  const configs: Config[] = [];
-
-  for (let i = 0; searchParams.get(`file${i}`); i++) {
-    files.push(searchParams.get(`file${i}`) as string);
-    const config = searchParams.get(`config${i}`);
-    if (config) {
-      const parsedConfig = JSON.parse(config) as Config;
-      if (!parsedConfig.copies) {
-        parsedConfig.copies = 1; // Set default value for copies
-      }
-      configs.push(parsedConfig);
-    }
-  }
-
-  const [orderDetails, setOrderDetails] = useState(
-    configs.map((config, index) => ({
-      ...config,
-      file: files[index],
-    }))
-  );
+  const store = useFileStore();
+  const { data: session } = useSession();
 
   const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(
     null
   );
 
+  // Get filesWithConfigs from Zustand
+  const filesWithConfigs = store.filesWithConfigs;
+
   const isValidOrder = (details: Config) => {
     return (
-      details.file &&
       details.color &&
       details.pagesToPrint &&
       details.copies &&
-      details.pageSize &&
       details.orientation &&
       details.sided &&
       details.totalPrice
     );
   };
 
-  const totalPrice = orderDetails.reduce((sum, details) => {
-    return sum + details.totalPrice;
+  const totalPrice = filesWithConfigs.reduce((sum, item) => {
+    return sum + item.config.totalPrice;
   }, 0);
 
   const loadRazorpayScript = (): Promise<void> => {
@@ -117,11 +88,30 @@ export default function OrderSummary() {
         currency: "INR",
         name: "InstaPrint",
         description: "Order Payment",
-        handler: function (response: any) {
+        handler: async function (response: any) {
           console.log(response);
+
+          // Prepare the data to send to your API
+          const formData = new FormData();
+          formData.append("paymentId", response.razorpay_payment_id);
+
+          filesWithConfigs.forEach((fileWithConfig, index) => {
+            formData.append(`file_${index}`, fileWithConfig.file); // Append the actual file
+            formData.append(
+              `config_${index}`,
+              JSON.stringify(fileWithConfig.config) // Serialize the config
+            );
+          });
+
+          formData.append("user_id", session!.user!.id!);
+
+          // Send the data to your API
+          const apiResponse = await axios.post("/api/file_upload", formData);
+          console.log("API Response:", apiResponse.data);
+
           Swal.fire("Success", "Payment successful", "success").then(() => {
             const query = new URLSearchParams({
-              orderDetails: JSON.stringify(orderDetails),
+              orderDetails: JSON.stringify(filesWithConfigs),
             }).toString();
             router.push(`/order-history?${query}`);
           });
@@ -154,7 +144,7 @@ export default function OrderSummary() {
       <h1 className="text-2xl font-semibold mb-8">Order Summary</h1>
 
       <div className="space-y-4">
-        {orderDetails.map((details, index) => (
+        {filesWithConfigs.map((item, index) => (
           <BackgroundGradient
             key={index}
             className="w-full p-4 bg-black dark:bg-gray-700 rounded-xl cursor-pointer"
@@ -168,68 +158,40 @@ export default function OrderSummary() {
             >
               <h2 className="font-semibold mb-2">
                 <span className="text-gray-500 dark:text-gray-400">File:</span>{" "}
-                {details.file}
+                {item.file.name}
               </h2>
               <h2 className="font-semibold mb-2">
                 <span className="text-gray-500 dark:text-gray-400">
                   Total Price: <CurrencyRupeeIcon />
                 </span>{" "}
-                {details.totalPrice}
+                {item.config.totalPrice}
               </h2>
 
-              {selectedFileIndex === index && isValidOrder(details) && (
+              {selectedFileIndex === index && isValidOrder(item.config) && (
                 <div className="mt-4 space-y-4">
                   <h2 className="font-semibold">
                     <span className="text-gray-500 dark:text-gray-400">
                       Color Mode:
                     </span>{" "}
-                    {details.color === "bw" ? "Black & White" : "Color"}
-                  </h2>
-                  <h2 className="font-semibold">
-                    <span className="text-gray-500 dark:text-gray-400">
-                      Page Size:
-                    </span>{" "}
-                    {details.pageSize}
-                  </h2>
-                  <h2 className="font-semibold">
-                    <span className="text-gray-500 dark:text-gray-400">
-                      Orientation:
-                    </span>{" "}
-                    {details.orientation}
+                    {item.config.color === "bw" ? "Black & White" : "Color"}
                   </h2>
                   <h2 className="font-semibold">
                     <span className="text-gray-500 dark:text-gray-400">
                       Pages to Print:
                     </span>{" "}
-                    {details.pagesToPrint}
+                    {item.config.pagesToPrint}
                   </h2>
                   <h2 className="font-semibold">
                     <span className="text-gray-500 dark:text-gray-400">
-                      Print Type:
+                      Orientation:
                     </span>{" "}
-                    {details.sided === "single"
-                      ? "Single Sided"
-                      : "Double Sided"}
+                    {item.config.orientation}
                   </h2>
                   <h2 className="font-semibold">
                     <span className="text-gray-500 dark:text-gray-400">
                       Copies:
                     </span>{" "}
-                    {details.copies}
-                  </h2>
-                  <h2 className="font-semibold">
-                    <span className="text-gray-500 dark:text-gray-400">
-                      Remarks:
-                    </span>{" "}
-                    {details.remarks}
-                  </h2>
-                </div>
-              )}
-
-              {selectedFileIndex === index && !isValidOrder(details) && (
-                <div className="mt-4 p-4 border border-red-700 rounded-lg">
-                  <h2 className="font-semibold text-red-500">
-                    Incomplete order details. Please check your configuration.
+                    {item.config.copies}
                   </h2>
                 </div>
               )}
@@ -253,7 +215,7 @@ export default function OrderSummary() {
         </button>
         <button
           onClick={() => router.push("/my-prints")}
-          className="w-full  relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+          className="w-full relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
         >
           <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
           <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl gap-2">
