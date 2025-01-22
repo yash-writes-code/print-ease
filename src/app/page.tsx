@@ -6,7 +6,7 @@ import StartButton from '../components/StartButton';
 
 export default function Home() {
   return (
-    <div className="h-[80vh] w-full relative bg-black text-white min-h-[80vh] flex flex-col items-center justify-center text-center overflow-hidden ">
+    <div className="h-[85vh] w-full relative bg-black text-white min-h-[80vh] flex flex-col items-center justify-center text-center  mt-10">
       <BackgroundBeamsWithCollision className="w-screen  z-0">
         {/* Add any children elements here if needed */}
         <div className="relative z-10 flex justify-center items-center flex-col">
