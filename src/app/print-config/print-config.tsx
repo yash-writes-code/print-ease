@@ -32,7 +32,7 @@ export default function PrintConfig({
     copies: initialConfig.copies || 1, // Ensure copies has a default value
     specificRange: initialConfig.specificRange || "", // Ensure specificRange has a default value
   });
-  const [totalPages, setTotalPages] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
     setConfig((prevConfig: Config) => ({
