@@ -7,6 +7,7 @@ export interface Config {
     remarks: string;
     specificRange: string;
     totalPrice:number;
+    pageSize:number;
   };
 
 export interface FileWithConfig{

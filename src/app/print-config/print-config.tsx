@@ -59,7 +59,6 @@ export default function PrintConfig({
   const calculateTotalPrice = () => {
     if (
       !config.color ||
-      !config.pageSize ||
       !config.orientation ||
       !config.pagesToPrint ||
       config.copies === 0 ||
@@ -69,7 +68,7 @@ export default function PrintConfig({
     }
 
 
-    const pricePerPage = config.color === "bw" ? 2 : 5;
+    const pricePerPage = config.color === "b&w" ? 2 : 5;
 
     let pages = totalPages;
 

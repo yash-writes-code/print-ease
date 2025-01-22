@@ -12,9 +12,11 @@
     "@auth/mongodb-adapter": "^3.7.4",
     "@azure/identity": "^4.5.0",
     "@azure/storage-blob": "^12.26.0",
+    "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@google-pay/button-react": "^3.1.0",
-    "@mui/icons-material": "^6.3.0",
+    "@mui/icons-material": "^6.4.1",
+    "@mui/material": "^6.4.1",
     "@radix-ui/react-avatar": "^1.1.2",
     "@react-pdf-viewer/core": "^3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",
@@ -38,11 +40,8 @@
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
     "react-pdf": "^9.2.1",
-
     "react-rnd": "^10.4.14",
-
     "sass": "^1.83.0",
-
     "sweetalert2": "^11.15.3",
     "tailwind-merge": "^2.6.0",
     "zustand": "^5.0.3"

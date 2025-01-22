@@ -11,7 +11,6 @@ interface OrderDetails {
   pagesToPrint: string;
   specificRange?: string;
   copies: number;
-  pageSize: string;
   orientation: string;
   sided: string;
   remarks: string;
@@ -32,6 +31,7 @@ export default function OrderHistory() {
           status: "Pending",
         })
       );
+      console.log(parsedOrderDetails)
       setOrderDetails(parsedOrderDetails);
     }
   }, [searchParams]);
@@ -47,18 +47,19 @@ export default function OrderHistory() {
         containerClassName="w-full p-2 space-y-1 rounded-lg"
         borderOnly
       >
-        {orderDetails.map((details, index) => (
+        
+        {orderDetails && orderDetails.map((details, index) => (
           <div
             key={index}
             className="w-full p-4 bg-black dark:bg-gray-700 rounded-xl"
           >
             <h2 className="font-semibold mb-2">
               <span className="text-gray-500 dark:text-gray-400">File:</span>{" "}
-              {details.file}
+              File Name Placeholder
             </h2>
             <h2 className="font-semibold mb-2">
               <span className="text-gray-500 dark:text-gray-400">
-                Total Price: <CurrencyRupeeIcon />
+                Total Price: 
               </span>{" "}
               {details.totalPrice}
             </h2>

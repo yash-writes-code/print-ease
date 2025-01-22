@@ -173,7 +173,7 @@ export default function OrderSummary() {
                     <span className="text-gray-500 dark:text-gray-400">
                       Color Mode:
                     </span>{" "}
-                    {item.config.color === "bw" ? "Black & White" : "Color"}
+                    {item.config.color === "b&w" ? "Black & White" : "Color"}
                   </h2>
                   <h2 className="font-semibold">
                     <span className="text-gray-500 dark:text-gray-400">
