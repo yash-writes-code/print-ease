@@ -16,8 +16,6 @@ import { Config } from "@/interfaces";
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
-
-
 export default function PrintConfig({
   selectedFile,
   initialConfig,

@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
 
+
+const client = await clientPromise;
+const db = client.db("PrintEase");
+const PrintDocCollection = db.collection("PrintDoc");
+
 export async function POST(req: Request) {
   try {
-    const client = await clientPromise;
-    const db = client.db("PrintEase");
-    const PrintDocCollection = db.collection("PrintDoc");
-
     const body = await req.json();
 
     // Validate request body
@@ -34,4 +35,32 @@ export async function POST(req: Request) {
   }
 }
 
-
+export async function GET(req:Request){
+  const { searchParams } = new URL(req.url);
+  const user_id = searchParams.get("user_id");
+    console.log("user id",user_id);
+    if(!user_id){
+      return NextResponse.json(
+        {message:"User ID not provided"},
+        {status:400}
+      )
+    }
+    try{
+      if(!ObjectId.isValid(user_id)){
+        return NextResponse.json(
+          {message:"Not a vlid user id"},
+          {status:500}
+        )
+      }
+      const data = await PrintDocCollection.find({userID :new ObjectId(user_id)}).sort({createdAt:-1}).toArray();
+      return NextResponse.json(data,{status:200});
+    }
+    catch(e:any){
+      console.log(e.message);
+      
+      return NextResponse.json(
+        {message:`Some error occured finding the printdoc with userid ${user_id}`},
+        {status:500}
+      )
+    }
+}
