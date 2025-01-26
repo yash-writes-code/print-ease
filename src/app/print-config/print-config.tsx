@@ -16,8 +16,6 @@ import { Config } from "@/interfaces";
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
-
-
 export default function PrintConfig({
   selectedFile,
   initialConfig,
@@ -34,7 +32,7 @@ export default function PrintConfig({
     copies: initialConfig.copies || 1, // Ensure copies has a default value
     specificRange: initialConfig.specificRange || "", // Ensure specificRange has a default value
   });
-  const [totalPages, setTotalPages] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
     setConfig((prevConfig: Config) => ({

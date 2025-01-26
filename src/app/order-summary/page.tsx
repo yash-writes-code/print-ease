@@ -1,12 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import {
-  getDocument,
-  GlobalWorkerOptions,
-  version as pdfjsVersion,
-} from "pdfjs-dist";
+import { useState } from "react";
+import { GlobalWorkerOptions, version as pdfjsVersion } from "pdfjs-dist";
 import { BackgroundGradient } from "../../components/ui/BackgroundGradient";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -107,13 +103,10 @@ export default function OrderSummary() {
 
           // Send the data to your API
           const apiResponse = await axios.post("/api/file_upload", formData);
-          console.log("API Response:", apiResponse.data);
+          console.log("API Response:", apiResponse);
 
           Swal.fire("Success", "Payment successful", "success").then(() => {
-            const query = new URLSearchParams({
-              orderDetails: JSON.stringify(filesWithConfigs),
-            }).toString();
-            router.push(`/order-history?${query}`);
+            router.push(`/my-prints`);
           });
         },
         prefill: {
