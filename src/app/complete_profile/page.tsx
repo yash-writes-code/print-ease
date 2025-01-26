@@ -1,14 +1,16 @@
+"use client";
+
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { TextField, Button, Typography } from "@mui/material";
 import axios from "axios";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 
 const CompleteProfile = () => {
   const [name, setName] = useState<string>("");
   const [rollNo, setRollNo] = useState<string>("");
   const router = useRouter();
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {

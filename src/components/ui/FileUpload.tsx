@@ -59,7 +59,9 @@ export const FileUpload = ({
     }
 
     setFiles((prevFiles) => [...prevFiles, ...validFiles]);
-    onChange && onChange(validFiles);
+    if (onChange) {
+      onChange(validFiles);
+    }
   };
 
   const handleClick = () => {

@@ -1,5 +1,6 @@
+
 import { NextRequest, NextResponse } from "next/server";
-import FileModel from "@/app/models/File";
+
 import clientPromise from "@/lib/db";
 
 const client = await clientPromise;
@@ -35,7 +36,7 @@ export async function POST(req:NextRequest){
         { status: 201 }
       );
     }
-    catch(e:any){
+    catch(e:unknown){
         return NextResponse.json(
             {message:"some error while creating file instance"},
             {status:500}
