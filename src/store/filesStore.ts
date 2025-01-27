@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { FileWithConfig, Config } from "@/interfaces";
+import { Config } from "@/interfaces";
 
 interface FilesStore {
   filesWithConfigs: { file: File; config: Config }[];  

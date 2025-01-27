@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import html2canvas from "html2canvas";

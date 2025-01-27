@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
 
+
 // GET: Fetch PrintDoc by ID
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const client = await clientPromise;
     const db = client.db("PrintEase");
@@ -29,13 +30,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // PUT: Update PrintDoc by ID
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const client = await clientPromise;
     const db = client.db("PrintEase");
     const PrintDocCollection = db.collection("PrintDoc");
 
-    const { id } = params;
+    const { id } = await params;
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid PrintDoc ID" }, { status: 400 });
     }
@@ -58,14 +59,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // DELETE: Remove PrintDoc and associated Files by ID
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const client = await clientPromise;
     const db = client.db("PrintEase");
     const PrintDocCollection = db.collection("PrintDoc");
     const FileCollection = db.collection("File");
 
-    const { id } = params;
+    const { id } = await params;
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid PrintDoc ID" }, { status: 400 });
     }
