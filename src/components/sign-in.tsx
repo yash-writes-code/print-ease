@@ -26,7 +26,7 @@ export default function SignIn() {
           <button onClick={handleSignOut}>Sign Out</button>
         </div>
       ) : (
-        <button onClick={() => signIn("google")}>Sign In with Google</button>
+        <button onClick={() => signIn("google")} className="text-white">Sign In with Google</button>
       )}
     </div>
   );
