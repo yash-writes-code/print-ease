@@ -29,7 +29,8 @@ export default function OrderHistory() {
         const transformedOrders = data.map((order: any) => ({
           date: new Date(order.createdAt),  // Convert string to Date object
           status: order.status,
-          cost: order.cost
+          cost: order.cost,
+           orderId: order._id || 'NO-ID'
         }));
   
         setOrderDetails(transformedOrders);
@@ -63,7 +64,7 @@ export default function OrderHistory() {
               >
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                   <h2 className="font-medium text-base break-all text-white">
-                    #{details.orderId.slice(-6)}
+                  #{(details.orderId || 'NO-ID').slice(-6)}
                   </h2>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium w-full sm:w-auto text-center text-white ${
