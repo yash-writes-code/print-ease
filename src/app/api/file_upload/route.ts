@@ -98,8 +98,10 @@ export async function POST(req: NextRequest) {
       const link = blockBlobClient.url;
       cost += config.totalPrice;
 
-  
-      const file_create = await axios.post('http://localhost:3000/api/file',{
+      const url=process.env.NEXT_PUBLIC_BASE_URL+'/api/file';
+      console.log(url);
+      
+      const file_create = await axios.post(url,{
         userId : userId,
         link:link,
         color:config.color,
@@ -119,7 +121,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create a new PrintDoc instance
-    const printDoc_create = await axios.post("http://localhost:3000/api/printdoc",{
+    const printDoc_create = await axios.post((process.env.NEXT_PUBLIC_BASE_URL+"/api/printdoc"),{
       userID: userId,
       fileID: uploadedFileIds,
       storeID: "0001",

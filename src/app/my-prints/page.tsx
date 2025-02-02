@@ -27,7 +27,7 @@ export default function OrderHistory() {
 
     const fetchOrders = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:3000/api/printdoc?user_id=${session.user?.id}`);
+        const { data } = await axios.get((process.env.NEXT_PUBLIC_BASE_URL+`/api/printdoc?user_id=${session.user?.id}`));
         const transformedOrders = data.map((order: any) => ({
           date: new Date(order.createdAt),  // Convert string to Date object
           status: order.status,
