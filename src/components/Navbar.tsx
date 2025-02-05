@@ -33,11 +33,11 @@ export default function NavbarComponent() {
   };
 
   return (
-    <nav className="border-b bg-gray-900 dark:bg-black fixed z-10 w-full top-0">
+    <nav className="border-b bg-black fixed z-10 w-full top-0">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="text-xl font-semibold text-white">
-            InstaPrint
+            PrintEase
           </Link>
           <div className="hidden md:flex gap-8 items-center">
             <Link

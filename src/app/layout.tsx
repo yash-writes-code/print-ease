@@ -25,7 +25,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           <Navbar />
-          <main className="container mx-auto px-4 py-8">{children}</main>
+          <main className="bg-black container auto px-4 py-8">{children}</main>
         </SessionProvider>
       </body>
     </html>

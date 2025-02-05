@@ -1,6 +1,5 @@
 "use client";
 
-
 import { useState } from "react";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
@@ -14,9 +13,8 @@ import "sweetalert2/src/sweetalert2.scss";
 import PrintIcon from "@mui/icons-material/Print";
 import { CollageEditor } from "../collageEditor/CollageEditor"; // Adjust the path to where your CollageEditor component is
 import PrintConfig from "../print-config/print-config"; // Adjust the path to where your PDFViewer component is
-import useFileStore from '@/store/filesStore';
- // Adjust the path to where your PDFViewer component is
-
+import useFileStore from "@/store/filesStore";
+// Adjust the path to where your PDFViewer component is
 
 export default function MyPrints() {
   const store = useFileStore();
@@ -30,13 +28,23 @@ export default function MyPrints() {
   const router = useRouter();
 
   const handleFileUpload = (newFiles: File[]) => {
+    if (files.length + newFiles.length > 3) {
+      Swal.fire("Error", "You can upload a maximum of 3 files.", "error");
+      return;
+    }
+
     const validFiles = newFiles.filter(
-      (file) =>
-        file.type === "application/pdf" ||
-        file.type === "image/jpeg" ||
-        file.type === "image/png" ||
-        file.type.includes("wordprocessingml")
+      (file) => file.type === "application/pdf" && file.size < 30 * 1024 * 1024 // 30MB
     );
+
+    if (validFiles.length !== newFiles.length) {
+      Swal.fire(
+        "Error",
+        "Invalid Format or File Size. Only PDF files under 30MB are allowed.",
+        "error"
+      );
+      return;
+    }
 
     const duplicateFiles = validFiles.filter((file) =>
       files.some((existingFile) => existingFile.name === file.name)
@@ -44,15 +52,6 @@ export default function MyPrints() {
 
     if (duplicateFiles.length > 0) {
       Swal.fire("Error", "File Already Uploaded", "error");
-      return;
-    }
-
-    if (validFiles.length !== newFiles.length) {
-      Swal.fire(
-        "Error",
-        "Invalid Format. Only PDF, JPG, and Word files are allowed.",
-        "error"
-      );
       return;
     }
 
@@ -77,28 +76,29 @@ export default function MyPrints() {
       ...prevConfigs,
       [fileName]: config,
     }));
+    setSelectedFile(null); // Close the configuration on save
   };
 
   //current handle print function makes us to lose file data
   const handlePrint = () => {
-   
     let allConfigured = true;
 
     files.forEach((file, index) => {
       const config = fileConfigs[file.name];
       if (!config || Object.keys(config).length === 0) {
         allConfigured = false;
-      }
-      else{
+      } else {
         //adding the current file to the global state
-        store.addFile(file,config);
+        store.addFile(file, config);
       }
-      
     });
 
     if (!allConfigured) {
-
-      Swal.fire('Error', 'Please configure your files', 'error');
+      Swal.fire(
+        "Error",
+        "Please click on the file to set your configurations",
+        "error"
+      );
       store.clearAll();
 
       return;
@@ -183,28 +183,11 @@ export default function MyPrints() {
     setIsCollageEditorOpen(true);
   };
 
-  const handleAddMoreImages = (newFiles: File[]) => {
-    const validFiles = newFiles.filter(
-      (file) => file.type === "image/jpeg" || file.type === "image/png"
-    );
-
-    if (validFiles.length !== newFiles.length) {
-      Swal.fire(
-        "Error",
-        "Invalid Format. Only JPG and PNG files are allowed.",
-        "error"
-      );
-      return;
-    }
-
-    setCollageImages([...collageImages, ...validFiles]);
-  };
-
   return (
-    <div
-      className={`bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-200 max-w-2xl mx-auto p-6 mt-10`}
-    >
-      <h1 className="text-4xl text-center font-semibold mb-10">My Prints</h1>
+    <div className={`bg-gray-800  max-w-2xl mx-auto p-6 mt-10`}>
+      <h1 className="text-white text-4xl text-center font-semibold mb-10">
+        My Prints
+      </h1>
 
       {files.length === 0 && (
         <div className="flex justify-center items-center mb-4 flex-col w-full">
@@ -215,7 +198,7 @@ export default function MyPrints() {
               className="w-full relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
             >
               <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
-              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl gap-2">
+              <span className="text-white inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-black px-3 py-1 text-sm font-bold  backdrop-blur-3xl gap-2">
                 <AddIcon />
                 Create Collage
               </span>
@@ -238,26 +221,32 @@ export default function MyPrints() {
 
       {files.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400">
-            No prints yet. Add your first document!
-          </p>
+          <p className="text-white">No prints yet. Add your first document!</p>
         </div>
       ) : (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Uploaded Files</h2>
-
+          <h2 className="text-xl text-white font-semibold mb-4">
+            Uploaded Files
+          </h2>
+          <p className="text-gray-300 text-sm font-light">
+            Click on the file to set the configurations.
+          </p>
           {files.map((file, index) => (
             <div
               key={index}
-              className={`flex justify-between items-center cursor-pointer p-4 bg-gray-800 dark:bg-gray-700 rounded-lg ${
+              className={`flex justify-between items-center cursor-pointer p-4 bg-gray-900 text-white  rounded-lg ${
                 selectedFile === file ? "ring-2 ring-blue-500" : ""
               }`}
+              onClick={() => handleFileClick(file)} // Apply click handler to the entire div
             >
-              <span onClick={() => handleFileClick(file)}>
+              <span>
                 {file.name} {fileConfigs[file.name] ? "(configured)" : ""}
               </span>
               <button
-                onClick={() => handleFileDelete(file)}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering the div click event
+                  handleFileDelete(file);
+                }}
                 className="text-red-500 hover:text-red-700"
               >
                 <DeleteIcon />
@@ -283,6 +272,7 @@ export default function MyPrints() {
                   onSave={(config) =>
                     handleConfigSave(selectedFile.name, config)
                   }
+                  onClose={() => setSelectedFile(null)} // Pass onClose prop
                 />
               </div>
             </div>
@@ -303,40 +293,19 @@ export default function MyPrints() {
             <input
               id="file-upload"
               type="file"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              accept=".pdf" // Only accept PDF files
               multiple
               onChange={(e) => {
                 const newFiles = Array.from(e.target.files!);
-                const validFiles = newFiles.filter(
-                  (file) =>
-                    file.type === "application/pdf" ||
-                    file.type === "image/jpeg" ||
-                    file.type === "image/png" ||
-                    file.type.includes("wordprocessingml")
-                );
-
-                const duplicateFiles = validFiles.filter((file) =>
-                  files.some((existingFile) => existingFile.name === file.name)
-                );
-
-                if (duplicateFiles.length > 0) {
-                  Swal.fire("Error", "File Already Uploaded", "error");
-                  return;
-                }
-
-                if (validFiles.length !== newFiles.length) {
+                if (newFiles.length > 3) {
                   Swal.fire(
                     "Error",
-                    "Invalid Format. Only PDF, JPG, and Word files are allowed.",
+                    "You can upload a maximum of 3 files at a time.",
                     "error"
                   );
                   return;
                 }
-
-                setFiles([...files, ...validFiles]);
-                Swal.fire("Success", "File Uploaded", "success").then(() => {
-                  window.scrollTo(0, 0);
-                });
+                handleFileUpload(newFiles);
               }}
               className="hidden"
             />
@@ -348,7 +317,7 @@ export default function MyPrints() {
               className="w-full relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
             >
               <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
-              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl gap-2">
+              <span className="text-white inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-black px-3 py-1 text-sm font-medium backdrop-blur-3xl gap-2">
                 <AddIcon />
                 Create Collage
               </span>

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
 import { cn } from "@/lib/utils";
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { IconUpload } from "@tabler/icons-react";
 import { useDropzone } from "react-dropzone";
-import Swal from 'sweetalert2';
-import 'sweetalert2/src/sweetalert2.scss';
+import Swal from "sweetalert2";
+import "sweetalert2/src/sweetalert2.scss";
 
 const mainVariant = {
   initial: {
@@ -38,24 +38,21 @@ export const FileUpload = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (newFiles: File[]) => {
-    const validFiles = newFiles.filter(file => 
-      file.type === 'application/pdf' || 
-      file.type === 'image/jpeg' || 
-      file.type === 'image/png' || 
-      file.type.includes('wordprocessingml')
+    const validFiles = newFiles.filter(
+      (file) => file.type === "application/pdf"
     );
 
-    const duplicateFiles = validFiles.filter(file => 
-      files.some(existingFile => existingFile.name === file.name)
+    const duplicateFiles = validFiles.filter((file) =>
+      files.some((existingFile) => existingFile.name === file.name)
     );
 
     if (duplicateFiles.length > 0) {
-      Swal.fire('Error', 'File Already Uploaded', 'error');
+      Swal.fire("Error", "File Already Uploaded", "error");
       return;
     }
 
     if (validFiles.length !== newFiles.length) {
-      Swal.fire('Error', 'Invalid Format. Only PDF, JPG, and Word files are allowed.', 'error');
+      Swal.fire("Error", "Invalid Format. Only PDF files are allowed", "error");
     }
 
     setFiles((prevFiles) => [...prevFiles, ...validFiles]);
@@ -88,18 +85,16 @@ export const FileUpload = ({
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
-          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+          accept=".pdf,"
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />
-        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
-          
-        </div>
+        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]"></div>
         <div className="flex flex-col items-center justify-center">
-          <p className="text-slate-500 relative z-20 font-sans font-bold  dark:text-neutral-300 text-2xl">
+          <p className="text-white relative z-20 font-sans font-bold  text-2xl">
             Upload File
           </p>
-          <p className="relative z-20 font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
+          <p className="relative z-20 font-sans font-normal text-white text-base mt-2">
             Drag or drop your files here or click to upload
           </p>
           <div className="relative w-full mt-10 max-w-xl mx-auto">
@@ -128,9 +123,9 @@ export const FileUpload = ({
                       layout
                       className="rounded-lg px-2 py-1 w-fit flex-shrink-0 text-sm text-neutral-600 dark:bg-neutral-800 dark:text-white shadow-input"
                     ></motion.p>
-                      {(file.size / (1024 * 1024)).toFixed(2)} MB
+                    {(file.size / (1024 * 1024)).toFixed(2)} MB
                   </div>
-                
+
                   <div className="flex text-sm md:flex-row flex-col items-start md:items-center w-full mt-2 justify-between text-neutral-600 dark:text-neutral-400">
                     <motion.p
                       initial={{ opacity: 0 }}
@@ -140,7 +135,7 @@ export const FileUpload = ({
                     >
                       {file.type}
                     </motion.p>
-                
+
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -151,7 +146,6 @@ export const FileUpload = ({
                     </motion.p>
                   </div>
                 </motion.div>
-                
               ))}
             {!files.length && (
               <motion.div
@@ -163,7 +157,7 @@ export const FileUpload = ({
                   damping: 20,
                 }}
                 className={cn(
-                  "relative group-hover/file:shadow-2xl z-40 bg-white dark:bg-neutral-900 flex items-center justify-center h-32 mt-4 w-full max-w-[8rem] mx-auto rounded-md",
+                  "relative group-hover/file:shadow-2xl z-40 bg-black flex items-center justify-center h-32 mt-4 w-full max-w-[8rem] mx-auto rounded-md",
                   "shadow-[0px_10px_50px_rgba(0,0,0,0.1)]"
                 )}
               >
@@ -194,4 +188,3 @@ export const FileUpload = ({
     </div>
   );
 };
-

@@ -11,7 +11,7 @@ import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
-import SaveIcon from '@mui/icons-material/Save';
+import SaveIcon from "@mui/icons-material/Save";
 import { Config } from "@/interfaces";
 // Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
@@ -20,10 +20,12 @@ export default function PrintConfig({
   selectedFile,
   initialConfig,
   onSave,
+  onClose, // Add onClose prop
 }: {
   selectedFile: File;
   initialConfig: Config;
   onSave: (config: Config) => void;
+  onClose: () => void; // Add onClose prop type
 }) {
   const router = useRouter();
 
@@ -64,7 +66,6 @@ export default function PrintConfig({
     ) {
       return 0; // Return 0 if any required field is not selected
     }
-
 
     const pricePerPage = config.color === "b&w" ? 2 : 5;
 
@@ -144,13 +145,17 @@ export default function PrintConfig({
       return;
     }
     onSave({ ...config, totalPrice });
-    Swal.fire("Success", "File Configured", "success");
+    Swal.fire("Success", "File Configured", "success").then(() => {
+      onClose(); // Close the configuration on success
+    });
   };
 
   return (
-    <div className={`max-w-2xl mx-auto p-6 rounded-lg `}>
+    <div className={`max-w-2xl mx-auto p-6 rounded-lg bg-gray-900`}>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-semibold ">Print Configuration</h1>
+        <h1 className="text-2xl font-semibold text-white">
+          Print Configuration
+        </h1>
         <button
           onClick={() => router.back()}
           className="text-gray-400 hover:text-gray-200"
@@ -161,15 +166,14 @@ export default function PrintConfig({
 
       <div className="space-y-6">
         {/* Color Mode */}
-        <div className="p-4 border border-gray-700 rounded-lg">
-          <h2 className="font-semibold mb-4">Color Mode</h2>
+        <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">
+          <h2 className="font-semibold mb-4 text-white">Color Mode</h2>
           <div className="flex gap-4">
             <button
-
               className={`px-4 py-2 rounded-lg ${
                 config.color === "b&w"
-                  ? "bg-gray-700 text-white"
-                  : "border border-gray-600 hover:border-gray-400"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
               onClick={() => setConfig({ ...config, color: "b&w" })}
             >
@@ -178,8 +182,8 @@ export default function PrintConfig({
             <button
               className={`px-4 py-2 rounded-lg ${
                 config.color === "color"
-                  ? "bg-gray-700 text-white"
-                  : "border border-gray-600 hover:border-gray-400"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
               onClick={() => setConfig({ ...config, color: "color" })}
             >
@@ -188,17 +192,15 @@ export default function PrintConfig({
           </div>
         </div>
 
-        
-
         {/* Orientation */}
-        <div className="p-4 border border-gray-700 rounded-lg">
-          <h2 className="font-semibold mb-4">Orientation</h2>
+        <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">
+          <h2 className="font-semibold mb-4 text-white">Orientation</h2>
           <div className="flex gap-4">
             <button
               className={`px-4 py-2 rounded-lg ${
                 config.orientation === "portrait"
-                  ? "bg-gray-700 text-white"
-                  : "border border-gray-600 hover:border-gray-400"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
               onClick={() => setConfig({ ...config, orientation: "portrait" })}
             >
@@ -207,8 +209,8 @@ export default function PrintConfig({
             <button
               className={`px-4 py-2 rounded-lg ${
                 config.orientation === "landscape"
-                  ? "bg-gray-700 text-white"
-                  : "border border-gray-600 hover:border-gray-400"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
               onClick={() => setConfig({ ...config, orientation: "landscape" })}
             >
@@ -218,14 +220,14 @@ export default function PrintConfig({
         </div>
 
         {/* Pages to Print */}
-        <div className="p-4 border border-gray-700 rounded-lg">
-          <h2 className="font-semibold mb-4">Pages to Print</h2>
+        <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">
+          <h2 className="font-semibold mb-4 text-white">Pages to Print</h2>
           <div className="flex gap-4">
             <button
               className={`px-4 py-2 rounded-lg ${
                 config.pagesToPrint === "all"
-                  ? "bg-gray-700 text-white"
-                  : "border border-gray-600 hover:border-gray-400"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
               onClick={() =>
                 setConfig({ ...config, pagesToPrint: "all", specificRange: "" })
@@ -236,8 +238,8 @@ export default function PrintConfig({
             <button
               className={`px-4 py-2 rounded-lg ${
                 config.pagesToPrint === "specific"
-                  ? "bg-gray-700 text-white"
-                  : "border border-gray-600 hover:border-gray-400"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
               onClick={() => setConfig({ ...config, pagesToPrint: "specific" })}
             >
@@ -258,14 +260,14 @@ export default function PrintConfig({
         </div>
 
         {/* Print Type */}
-        <div className="p-4 border border-gray-700 rounded-lg">
-          <h2 className="font-semibold mb-4">Print Type</h2>
+        <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">
+          <h2 className="font-semibold mb-4 text-white">Print Type</h2>
           <div className="flex gap-4">
             <button
               className={`px-4 py-2 rounded-lg ${
                 config.sided === "single"
-                  ? "bg-gray-700 text-white"
-                  : "border border-gray-600 hover:border-gray-400"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
               onClick={() => setConfig({ ...config, sided: "single" })}
             >
@@ -274,8 +276,8 @@ export default function PrintConfig({
             <button
               className={`px-4 py-2 rounded-lg ${
                 config.sided === "double"
-                  ? "bg-gray-700 text-white"
-                  : "border border-gray-600 hover:border-gray-400"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
               onClick={() => setConfig({ ...config, sided: "double" })}
             >
@@ -285,8 +287,8 @@ export default function PrintConfig({
         </div>
 
         {/* Copies */}
-        <div className="p-4 border border-gray-700 rounded-lg">
-          <h2 className="font-semibold mb-4">Copies</h2>
+        <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">
+          <h2 className="font-semibold mb-4 text-white">Copies</h2>
           <input
             type="number"
             className="w-full p-2 border border-gray-600 rounded-lg bg-gray-800 text-white"
@@ -303,8 +305,8 @@ export default function PrintConfig({
         </div>
 
         {/* Remarks */}
-        <div className="p-4 border border-gray-700 rounded-lg">
-          <h2 className="font-semibold mb-4">Remarks</h2>
+        <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">
+          <h2 className="font-semibold mb-4 text-white">Remarks</h2>
           <textarea
             className="w-full p-2 border border-gray-600 rounded-lg bg-gray-800 text-white resize-none"
             placeholder="Add any remarks here"
@@ -315,10 +317,13 @@ export default function PrintConfig({
         </div>
 
         {/* Total Price */}
-        <div className="p-4 border border-gray-700 rounded-lg">
-          <h2 className="font-semibold mb-4">
+        <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">
+          <h2 className="font-semibold mb-4 text-white">
             Total Price: <CurrencyRupeeIcon /> {calculateTotalPrice()}
           </h2>
+          <p className="text-sm font-light text-gray-300">
+            Price is calculated as 2 for B&W and 5 for color
+          </p>
         </div>
 
         <button

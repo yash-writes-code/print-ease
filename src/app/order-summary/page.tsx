@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -83,7 +82,7 @@ export default function OrderSummary() {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
         amount: totalPrice * 100, // Convert to paise
         currency: "INR",
-        name: "InstaPrint",
+        name: "PrintEase",
         description: "Order Payment",
         handler: async function (response: any) {
           console.log(response);
@@ -208,7 +207,7 @@ export default function OrderSummary() {
           Proceed to Payment <ArrowForwardIcon />
         </button>
         <button
-          onClick={() => router.push("/my-prints")}
+          onClick={() => router.push("/new-order")}
           className="w-full relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
         >
           <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
