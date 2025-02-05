@@ -1,24 +1,10 @@
-
 import { NextRequest, NextResponse } from "next/server";
-import { BlobServiceClient } from "@azure/storage-blob";
-import { DefaultAzureCredential } from "@azure/identity";
 import mongoose from "mongoose";
 // import FileModel from "@/app/models/File"; // Adjust import path for your File model
 // import PrintDoc from "@/app/models/PrintDoc"; // Adjust import path for your PrintDoc model
 import axios from "axios";
 import { Config } from "@/interfaces";
-
-// Helper function to convert a readable stream to a Buffer
-async function streamToBuffer(stream: ReadableStream): Promise<Buffer> {
-  const chunks: Uint8Array[] = [];
-  const reader = stream.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) chunks.push(value);
-  }
-  return Buffer.concat(chunks);
-}
+import { uploadFileToAzure } from "@/lib/server/utils";
 
 export const config = {
   api: {
@@ -26,6 +12,25 @@ export const config = {
   },
 };
 
+function extract_files(formData : FormData){
+  const filesWithConfigs: Array<{ file: File; config: Config }> = [];
+    formData.forEach((value, key) => {
+      if (key.startsWith("file_")) {
+        const index = key.split("_")[1];
+        const file = value as File;
+        const configKey = `config_${index}`;
+        const config = formData.get(configKey);
+
+        if (config) {
+          filesWithConfigs.push({
+            file,
+            config: JSON.parse(config as string),
+          });
+        }
+      }
+    });
+    return filesWithConfigs;
+}
 export async function POST(req: NextRequest) {
   try {
     // Parse FormData from the request
@@ -43,22 +48,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const filesWithConfigs: Array<{ file: File; config: Config }> = [];
-    formData.forEach((value, key) => {
-      if (key.startsWith("file_")) {
-        const index = key.split("_")[1];
-        const file = value as File;
-        const configKey = `config_${index}`;
-        const config = formData.get(configKey);
-
-        if (config) {
-          filesWithConfigs.push({
-            file,
-            config: JSON.parse(config as string),
-          });
-        }
-      }
-    });
+    let filesWithConfigs=extract_files(formData);
 
     if (filesWithConfigs.length === 0) {
       return NextResponse.json(
@@ -66,40 +56,16 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    const ACCOUNT_NAME = process.env.NEXT_PUBLIC_ACCOUNT_NAME || "";
-    const CONTAINER_NAME = "user-files";
-
-    // Initialize Blob Service Client
-    const blobServiceClient = new BlobServiceClient(
-      `https://${ACCOUNT_NAME}.blob.core.windows.net`,
-      new DefaultAzureCredential()
-    );
-
-    // Get container client and ensure the container exists
-    const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
-    const createContainerResponse = await containerClient.createIfNotExists();
-    if (createContainerResponse.succeeded) {
-      console.log(`Container "${CONTAINER_NAME}" created successfully.`);
-    }
-
+    
     const uploadedFileIds: mongoose.Types.ObjectId[] = [];
     let cost=0;
     for (const { file, config } of filesWithConfigs) {
-      const blockBlobClient = containerClient.getBlockBlobClient(file.name);
-
-      // Convert the file stream to Buffer
-      const buffer = await streamToBuffer(file.stream());
+  
       console.log(`Uploading file: ${file.name} with config:`, config);
-
-      const uploadBlobResponse = await blockBlobClient.uploadData(buffer, {
-        blobHTTPHeaders: { blobContentType: file.type }, // Set MIME type
-      });
-      const link = blockBlobClient.url;
+      const link = await uploadFileToAzure(file);
       cost += config.totalPrice;
 
       const url=process.env.NEXT_PUBLIC_BASE_URL+'/api/file';
-      console.log(url);
       
       const file_create = await axios.post(url,{
         userId : userId,
@@ -115,9 +81,7 @@ export async function POST(req: NextRequest) {
       uploadedFileIds.push(file_create.data.id);
       
 
-      console.log(
-        `Uploaded "${file.name}" successfully. Request ID: ${uploadBlobResponse.requestId}`
-      );
+      console.log(`Uploaded "${file.name}" successfully`);
     }
 
     // Create a new PrintDoc instance
@@ -148,3 +112,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+
