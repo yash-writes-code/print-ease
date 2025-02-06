@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const db = client.db("PrintEase");
     const PrintDocCollection = db.collection("PrintDoc");
 
-    let { id } = await params;
+    const { id } = await params;
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid PrintDoc ID" }, { status: 400 });
     }

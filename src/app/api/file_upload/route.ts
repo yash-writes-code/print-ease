@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let filesWithConfigs=extract_files(formData);
+    const filesWithConfigs=extract_files(formData);
 
     if (filesWithConfigs.length === 0) {
       return NextResponse.json(
