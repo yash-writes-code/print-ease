@@ -8,7 +8,7 @@ export interface PrintDoc extends Document{
     userID: mongoose.Types.ObjectId;
     fileID: mongoose.Types.ObjectId[];
     storeID: mongoose.Types.ObjectId;
-    status: string;
+    status: 'pending' | 'completed' | 'collected';
     type: string;
     cost: number;
     createdAt: Date;

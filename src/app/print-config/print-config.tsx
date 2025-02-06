@@ -86,7 +86,8 @@ export default function PrintConfig({
     }
 
     if (config.sided === "double") {
-      pages = Math.ceil(pages / 2); // Half the pages for double-sided, rounding up for odd numbers
+
+      pages = (pages>1)?Math.ceil(pages / 2):1; // Half the pages for double-sided, rounding up for odd numbers
     }
 
     return pages * pricePerPage * config.copies;

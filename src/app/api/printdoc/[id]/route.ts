@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
-
+import { deleteFileFromAzure } from "@/lib/server/utils";
 
 // GET: Fetch PrintDoc by ID
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -11,7 +11,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const PrintDocCollection = db.collection("PrintDoc");
 
     const { id } = await params;
-
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid PrintDoc ID" }, { status: 400 });
     }
@@ -79,6 +78,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     // Delete associated files
+    for (const fileId of printDoc.fileID) {
+      const fileDoc = await FileCollection.findOne({ _id: fileId });
+      if (fileDoc) {
+        await deleteFileFromAzure(fileDoc.link); // Call Azure delete function
+      }
+    }
     await FileCollection.deleteMany({ _id: { $in: printDoc.fileID } });
 
     // Delete the PrintDoc itself
