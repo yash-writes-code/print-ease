@@ -19,7 +19,7 @@ export default function Home() {
             Print{" "}
             <FlipWords
               words={["Smartly", "Quickly", "Efficiently", "Easily"]}
-              className="text-2xl font-medium text-center "
+              className="text-2xl font-medium text-center"
             />
           </h2>
 

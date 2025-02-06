@@ -33,6 +33,10 @@ export default function PrintConfig({
     ...initialConfig,
     copies: initialConfig.copies || 1, // Ensure copies has a default value
     specificRange: initialConfig.specificRange || "", // Ensure specificRange has a default value
+    color: initialConfig.color || "b&w",
+    orientation: initialConfig.orientation || "portrait",
+    pagesToPrint: initialConfig.pagesToPrint || "all",
+    sided: initialConfig.sided || "single",
   });
   const [totalPages, setTotalPages] = useState<number>(1);
 
@@ -67,7 +71,7 @@ export default function PrintConfig({
       return 0; // Return 0 if any required field is not selected
     }
 
-    const pricePerPage = config.color === "b&w" ? 2 : 5;
+    const pricePerPage = config.color === "b&w" ? 2 : 8;
 
     let pages = totalPages;
 
@@ -144,7 +148,7 @@ export default function PrintConfig({
       );
       return;
     }
-    onSave({ ...config, totalPrice });
+    onSave({ ...config, totalPrice, configured: true }); // Mark as configured on save
     Swal.fire("Success", "File Configured", "success").then(() => {
       onClose(); // Close the configuration on success
     });
@@ -322,7 +326,7 @@ export default function PrintConfig({
             Total Price: <CurrencyRupeeIcon /> {calculateTotalPrice()}
           </h2>
           <p className="text-sm font-light text-gray-300">
-            Price is calculated as 2 for B&W and 5 for color
+            Price is calculated as 2 for B&W and 8 for color
           </p>
         </div>
 

@@ -55,7 +55,28 @@ export default function MyPrints() {
       return;
     }
 
+    const defaultConfig = {
+      color: "b&w",
+      orientation: "portrait",
+      pagesToPrint: "all",
+      sided: "single",
+      copies: 1,
+      specificRange: "",
+    };
+
+    const newFilesWithConfig = validFiles.map((file) => ({
+      file,
+      config: defaultConfig,
+    }));
+
     setFiles([...files, ...validFiles]);
+    setFileConfigs((prevConfigs) => ({
+      ...prevConfigs,
+      ...Object.fromEntries(
+        newFilesWithConfig.map(({ file, config }) => [file.name, config])
+      ),
+    }));
+
     Swal.fire("Success", "File Uploaded", "success").then(() => {
       window.scrollTo(0, 0);
     });
@@ -74,7 +95,7 @@ export default function MyPrints() {
   const handleConfigSave = (fileName: string, config: any) => {
     setFileConfigs((prevConfigs) => ({
       ...prevConfigs,
-      [fileName]: config,
+      [fileName]: { ...config, configured: true },
     }));
     setSelectedFile(null); // Close the configuration on save
   };
@@ -240,7 +261,10 @@ export default function MyPrints() {
               onClick={() => handleFileClick(file)} // Apply click handler to the entire div
             >
               <span>
-                {file.name} {fileConfigs[file.name] ? "(configured)" : ""}
+                {file.name}{" "}
+                {fileConfigs[file.name] && fileConfigs[file.name].configured
+                  ? "(configured)"
+                  : ""}
               </span>
               <button
                 onClick={(e) => {
@@ -261,7 +285,7 @@ export default function MyPrints() {
                   {" "}
                   Preview:{" "}
                 </span>
-                {selectedFile.name}
+                <span className="text-white">{selectedFile.name}</span>
               </h2>
               {renderPreview(selectedFile)}
 

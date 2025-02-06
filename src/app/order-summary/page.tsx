@@ -130,6 +130,11 @@ export default function OrderSummary() {
     }
   };
 
+  const handleGoBack = () => {
+    store.clearAll(); // Clear all files from the store
+    router.push("/new-order"); // Navigate back to the new order page
+  };
+
   return (
     <div
       className={`mt-[100px] max-w-2xl mx-auto p-6 rounded-lg bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-200`}
@@ -207,7 +212,7 @@ export default function OrderSummary() {
           Proceed to Payment <ArrowForwardIcon />
         </button>
         <button
-          onClick={() => router.push("/new-order")}
+          onClick={handleGoBack}
           className="w-full relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
         >
           <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />

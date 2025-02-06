@@ -55,6 +55,11 @@ export const FileUpload = ({
       Swal.fire("Error", "Invalid Format. Only PDF files are allowed", "error");
     }
 
+    if (files.length + validFiles.length > 3) {
+      Swal.fire("Error", "You can upload a maximum of 3 files.", "error");
+      return;
+    }
+
     setFiles((prevFiles) => [...prevFiles, ...validFiles]);
     if (onChange) {
       onChange(validFiles);
@@ -85,7 +90,8 @@ export const FileUpload = ({
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
-          accept=".pdf,"
+          accept=".pdf"
+          multiple
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />
