@@ -67,7 +67,7 @@ export default function PrintConfig({
       return 0; // Return 0 if any required field is not selected
     }
 
-    const pricePerPage = config.color === "b&w" ? 2 : 5;
+    const pricePerPage = config.color === "b&w" ? 2 : 8;
 
     let pages = totalPages;
 
@@ -82,7 +82,8 @@ export default function PrintConfig({
     }
 
     if (config.sided === "double") {
-      pages = Math.ceil(pages / 2); // Half the pages for double-sided, rounding up for odd numbers
+
+      pages = (pages>1)?Math.ceil(pages / 2):1; // Half the pages for double-sided, rounding up for odd numbers
     }
 
     return pages * pricePerPage * config.copies;
@@ -322,7 +323,7 @@ export default function PrintConfig({
             Total Price: <CurrencyRupeeIcon /> {calculateTotalPrice()}
           </h2>
           <p className="text-sm font-light text-gray-300">
-            Price is calculated as 2 for B&W and 5 for color
+            Price is calculated as 2 for B&W and 8 for color
           </p>
         </div>
 
