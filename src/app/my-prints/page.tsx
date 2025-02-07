@@ -67,16 +67,18 @@ export default function OrderHistory() {
                   #{(details.orderId || 'NO-ID').slice(-6)}
                   </h2>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium w-full sm:w-auto text-center text-white ${
-                      details.status === "Completed"
-                        ? "bg-green-600"
-                        : details.status === "Pending"
-                        ? "bg-yellow-600"
-                        : "bg-blue-600"
-                    }`}
-                  >
-                    {details.status}
-                  </span>
+  className={`px-3 py-1 rounded-full text-xs font-medium w-full sm:w-auto text-center text-white ${
+    details.status === "Completed"
+      ? "bg-green-500"
+      : details.status === "Pending"
+      ? "bg-yellow-500"
+      : details.status === "Ready to Pickup"
+      ? "bg-blue-500"
+      : "bg-gray-500"
+  }`}
+>
+  {details.status}
+</span>
                 </div>
                 
                 <div className="flex items-center justify-between mb-2 bg-gray-800/50 p-2 rounded">
