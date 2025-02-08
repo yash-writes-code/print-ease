@@ -15,7 +15,6 @@ import { Config } from "@/interfaces";
 import { useSession } from "next-auth/react";
 import { Spinner } from "@heroui/react";
 
-// Set the worker URL for pdfjs-dist
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
 declare global {
@@ -35,7 +34,6 @@ export default function OrderSummary() {
     0
   );
 
-  // Load Razorpay script only once
   useEffect(() => {
     const loadScript = async () => {
       if (
@@ -77,7 +75,7 @@ export default function OrderSummary() {
             );
           });
 
-          const apiResponse = await axios.post("/api/file_upload", formData);
+          await axios.post("/api/file_upload", formData);
           Swal.fire("Success", "Payment successful", "success").then(() => {
             setLoading(true);
             router.push(`/my-prints`);
@@ -146,7 +144,6 @@ export default function OrderSummary() {
   );
 }
 
-// Extracted FileSummary Component
 function FileSummary({
   fileWithConfig,
 }: {
