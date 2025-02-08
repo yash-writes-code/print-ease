@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   getDocument,
@@ -60,7 +60,7 @@ export default function PrintConfig({
     }
   }, [selectedFile]);
 
-  const calculateTotalPrice = () => {
+  const calculateTotalPrice = useCallback(() => {
     if (
       !config.color ||
       !config.orientation ||
@@ -86,33 +86,35 @@ export default function PrintConfig({
     }
 
     if (config.sided === "double") {
-
-      pages = (pages>1)?Math.ceil(pages / 2):1; // Half the pages for double-sided, rounding up for odd numbers
+      pages = pages > 1 ? Math.ceil(pages / 2) : 1; // Half the pages for double-sided, rounding up for odd numbers
     }
 
     return pages * pricePerPage * config.copies;
-  };
+  }, [config, totalPages]);
 
-  const validateRange = (specificRange: string): boolean => {
-    const regex = /^(\d+(-\d+)?(, \d+(-\d+)?)*|\d+)$/;
-    if (!regex.test(specificRange)) {
-      return false;
-    }
-
-    const ranges: [number, number?][] = specificRange
-      .split(",")
-      .map((range) => range.split("-").map(Number) as [number, number?]);
-
-    for (const [start, end] of ranges) {
-      if (start < 1 || (end && end > totalPages)) {
+  const validateRange = useCallback(
+    (specificRange: string): boolean => {
+      const regex = /^(\d+(-\d+)?(, \d+(-\d+)?)*|\d+)$/;
+      if (!regex.test(specificRange)) {
         return false;
       }
-    }
 
-    return true;
-  };
+      const ranges: [number, number?][] = specificRange
+        .split(",")
+        .map((range) => range.split("-").map(Number) as [number, number?]);
 
-  const handleSave = () => {
+      for (const [start, end] of ranges) {
+        if (start < 1 || (end && end > totalPages)) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+    [totalPages]
+  );
+
+  const handleSave = useCallback(() => {
     if (
       !config.color ||
       !config.orientation ||
@@ -153,7 +155,12 @@ export default function PrintConfig({
     Swal.fire("Success", "File Configured", "success").then(() => {
       onClose(); // Close the configuration on success
     });
-  };
+  }, [config, calculateTotalPrice, validateRange, onSave, onClose, totalPages]);
+
+  const totalPrice = useMemo(
+    () => calculateTotalPrice(),
+    [calculateTotalPrice]
+  );
 
   return (
     <div className={`max-w-2xl mx-auto p-6 rounded-lg bg-gray-900`}>
@@ -324,7 +331,7 @@ export default function PrintConfig({
         {/* Total Price */}
         <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">
           <h2 className="font-semibold mb-4 text-white">
-            Total Price: <CurrencyRupeeIcon /> {calculateTotalPrice()}
+            Total Price: <CurrencyRupeeIcon /> {totalPrice}
           </h2>
           <p className="text-sm font-light text-gray-300">
             Price is calculated as 2 for B&W and 8 for color

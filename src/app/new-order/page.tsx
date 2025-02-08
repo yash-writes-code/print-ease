@@ -1,17 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  Print as PrintIcon,
+} from "@mui/icons-material";
+
 import { useRouter } from "next/navigation";
 import { FileUpload } from "../../components/ui/FileUpload"; // Adjust the path to where your FileUpload component is
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import PrintIcon from "@mui/icons-material/Print";
-import { CollageEditor } from "../collageEditor/CollageEditor"; // Adjust the path to where your CollageEditor component is
+
+import CollageEditor from "../collageEditor/CollageEditor"; // Adjust the path to where your CollageEditor component is
 import PrintConfig from "../print-config/print-config"; // Adjust the path to where your PDFViewer component is
 import useFileStore from "@/store/filesStore";
 // Adjust the path to where your PDFViewer component is
@@ -19,137 +23,128 @@ import useFileStore from "@/store/filesStore";
 export default function MyPrints() {
   const store = useFileStore();
 
-  const [files, setFiles] = useState<File[]>([]);
+  const [fileData, setFileData] = useState<{ file: File; config: any }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileConfigs, setFileConfigs] = useState<{ [key: string]: any }>({});
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCollageEditorOpen, setIsCollageEditorOpen] = useState(false);
   const [collageImages, setCollageImages] = useState<File[]>([]);
   const router = useRouter();
-
-  const handleFileUpload = (newFiles: File[]) => {
-    if (files.length + newFiles.length > 3) {
-      Swal.fire("Error", "You can upload a maximum of 3 files.", "error");
-      return;
-    }
-
-    const validFiles = newFiles.filter(
-      (file) => file.type === "application/pdf" && file.size < 30 * 1024 * 1024 // 30MB
-    );
-
-    if (validFiles.length !== newFiles.length) {
-      Swal.fire(
-        "Error",
-        "Invalid Format or File Size. Only PDF files under 30MB are allowed.",
-        "error"
-      );
-      return;
-    }
-
-    const duplicateFiles = validFiles.filter((file) =>
-      files.some((existingFile) => existingFile.name === file.name)
-    );
-
-    if (duplicateFiles.length > 0) {
-      Swal.fire("Error", "File Already Uploaded", "error");
-      return;
-    }
-
-    const defaultConfig = {
-      color: "b&w",
-      orientation: "portrait",
-      pagesToPrint: "all",
-      sided: "single",
-      copies: 1,
-      specificRange: "",
-    };
-
-    const newFilesWithConfig = validFiles.map((file) => ({
-      file,
-      config: defaultConfig,
-    }));
-
-    setFiles([...files, ...validFiles]);
-    setFileConfigs((prevConfigs) => ({
-      ...prevConfigs,
-      ...Object.fromEntries(
-        newFilesWithConfig.map(({ file, config }) => [file.name, config])
-      ),
-    }));
-
-    Swal.fire("Success", "File Uploaded", "success").then(() => {
-      window.scrollTo(0, 0);
+  const fileConfigs = useMemo(() => {
+    const configs: { [key: string]: any } = {};
+    fileData.forEach(({ file, config }) => {
+      configs[file.name] = config;
     });
-  };
+    return configs;
+  }, [fileData]);
 
-  const handleFileDelete = (fileToDelete: File) => {
-    setFiles(files.filter((file) => file !== fileToDelete));
-    if (selectedFile === fileToDelete) {
-      setSelectedFile(null);
-    }
-    const newConfigs = { ...fileConfigs };
-    delete newConfigs[fileToDelete.name];
-    setFileConfigs(newConfigs);
-  };
+  const handleFileUpload = useCallback(
+    (newFiles: File[]) => {
+      if (fileData.length + newFiles.length > 3) {
+        Swal.fire("Error", "You can upload a maximum of 3 files.", "error");
+        return;
+      }
 
-  const handleConfigSave = (fileName: string, config: any) => {
-    setFileConfigs((prevConfigs) => ({
-      ...prevConfigs,
-      [fileName]: { ...config, configured: true },
-    }));
-    setSelectedFile(null); // Close the configuration on save
-  };
+      const validFiles = newFiles.filter(
+        (file) =>
+          file.type === "application/pdf" && file.size < 30 * 1024 * 1024
+      );
+
+      if (validFiles.length !== newFiles.length) {
+        Swal.fire(
+          "Error",
+          "Invalid Format or File Size. Only PDF files under 30MB are allowed.",
+          "error"
+        );
+        return;
+      }
+
+      setFileData((prev) => [
+        ...prev,
+        ...validFiles.map((file) => ({
+          file,
+          config: {
+            color: "b&w",
+            orientation: "portrait",
+            pagesToPrint: "all",
+            sided: "single",
+            copies: 1,
+            specificRange: "",
+          },
+        })),
+      ]);
+
+      Swal.fire("Success", "File Uploaded", "success").then(() => {
+        window.scrollTo(0, 0);
+      });
+    },
+    [fileData]
+  );
+
+  const handleFileDelete = useCallback(
+    (fileToDelete: File) => {
+      setFileData((prev) => prev.filter(({ file }) => file !== fileToDelete));
+      if (selectedFile === fileToDelete) setSelectedFile(null);
+    },
+    [selectedFile]
+  );
+
+  const handleConfigSave = useCallback((fileName: string, config: any) => {
+    setFileData((prev) =>
+      prev.map((item) =>
+        item.file.name === fileName
+          ? { ...item, config: { ...config, configured: true } }
+          : item
+      )
+    );
+
+    setSelectedFile((prevSelected) =>
+      prevSelected?.name === fileName ? null : prevSelected
+    );
+  }, []);
 
   //current handle print function makes us to lose file data
-  const handlePrint = () => {
-    let allConfigured = true;
+  const handlePrint = useCallback(() => {
+    if (fileData.length === 0) return;
 
-    files.forEach((file, index) => {
-      const config = fileConfigs[file.name];
-      if (!config || Object.keys(config).length === 0) {
-        allConfigured = false;
-      } else {
-        //adding the current file to the global state
-        store.addFile(file, config);
-      }
-    });
+    const allConfigured = fileData.every(({ config }) => config?.configured);
 
     if (!allConfigured) {
       Swal.fire(
         "Error",
-        "Please click on the file to set your configurations",
+        "Please configure all files before printing.",
         "error"
       );
-      store.clearAll();
-
       return;
     }
 
+    fileData.forEach(({ file, config }) => store.addFile(file, config));
     router.push(`/order-summary`);
-  };
+  }, [fileData, store, router]);
 
-  const handleFileClick = (file: File) => {
-    if (selectedFile === file) {
-      setSelectedFile(null);
-    } else {
-      setSelectedFile(file);
-    }
-    setErrorMessage(null);
-  };
+  const handleFileClick = useCallback(
+    (file: File) => {
+      if (selectedFile === file) {
+        setSelectedFile(null);
+      } else {
+        setSelectedFile(file);
+      }
+      setErrorMessage(null);
+    },
+    [selectedFile]
+  );
 
-  const renderPreview = (file: File) => {
-    if (!file) {
+  const renderPreview = useMemo(() => {
+    if (!selectedFile) {
       return (
         <p className="text-gray-500 p-4">File not found or cannot be loaded.</p>
       );
     }
 
-    if (file.type === "application/pdf") {
-      const fileURL = URL.createObjectURL(file);
+    if (selectedFile.type === "application/pdf") {
+      const fileURL = URL.createObjectURL(selectedFile);
       return (
-        <Worker
-          workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}
-        >
+        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
           <div style={{ height: "750px" }}>
             <Viewer fileUrl={fileURL} />
           </div>
@@ -157,19 +152,13 @@ export default function MyPrints() {
       );
     }
 
-    if (file.type === "image/jpeg" || file.type === "image/png") {
+    if (selectedFile.type.startsWith("image/")) {
       return (
         <img
-          src={URL.createObjectURL(file)}
+          src={URL.createObjectURL(selectedFile)}
           alt="Preview"
           className="w-full rounded-lg"
         />
-      );
-    }
-
-    if (file.type.includes("wordprocessingml")) {
-      return (
-        <p className="text-gray-500 p-4">DOC/DOCX preview not available.</p>
       );
     }
 
@@ -178,20 +167,23 @@ export default function MyPrints() {
         Preview not available for this file type.
       </p>
     );
-  };
+  }, [selectedFile]);
 
-  const handleCollageSave = (collage: File) => {
-    setFiles([...files, collage]);
-    setIsCollageEditorOpen(false);
-    Swal.fire("Success", "Collage Saved", "success");
-  };
+  const handleCollageSave = useCallback(
+    (collage: File) => {
+      setFileData((prevData) => [...prevData, { file: collage, config: {} }]); // Assuming an empty config
+      setIsCollageEditorOpen(false);
+      Swal.fire("Success", "Collage Saved", "success");
+    },
+    [] // No dependencies needed
+  );
 
-  const handleCollageUpload = (newFiles: File[]) => {
-    const validFiles = newFiles.filter(
-      (file) => file.type === "image/jpeg" || file.type === "image/png"
+  const handleCollageUpload = useCallback((newFiles: File[]) => {
+    const validFiles = newFiles.filter((file) =>
+      file.type.startsWith("image/")
     );
 
-    if (validFiles.length !== newFiles.length) {
+    if (validFiles.length === 0) {
       Swal.fire(
         "Error",
         "Invalid Format. Only JPG and PNG files are allowed.",
@@ -202,7 +194,7 @@ export default function MyPrints() {
 
     setCollageImages(validFiles);
     setIsCollageEditorOpen(true);
-  };
+  }, []);
 
   return (
     <div className={`bg-gray-800  max-w-2xl mx-auto p-6 mt-10`}>
@@ -210,7 +202,7 @@ export default function MyPrints() {
         My Prints
       </h1>
 
-      {files.length === 0 && (
+      {fileData.length === 0 && (
         <div className="flex justify-center items-center mb-4 flex-col w-full">
           <FileUpload onChange={handleFileUpload} />
           <div className="mt-4">
@@ -240,7 +232,7 @@ export default function MyPrints() {
         </div>
       )}
 
-      {files.length === 0 ? (
+      {fileData.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-white">No prints yet. Add your first document!</p>
         </div>
@@ -252,7 +244,7 @@ export default function MyPrints() {
           <p className="text-gray-300 text-sm font-light">
             Click on the file to set the configurations.
           </p>
-          {files.map((file, index) => (
+          {fileData.map(({ file }, index) => (
             <div
               key={index}
               className={`flex justify-between items-center cursor-pointer p-4 bg-gray-900 text-white  rounded-lg ${
@@ -262,7 +254,8 @@ export default function MyPrints() {
             >
               <span>
                 {file.name}{" "}
-                {fileConfigs[file.name] && fileConfigs[file.name].configured
+                {fileData.find((item) => item.file.name === file.name)?.config
+                  .configured
                   ? "(configured)"
                   : ""}
               </span>
@@ -287,7 +280,7 @@ export default function MyPrints() {
                 </span>
                 <span className="text-white">{selectedFile.name}</span>
               </h2>
-              {renderPreview(selectedFile)}
+              {renderPreview}
 
               <div className="mt-4">
                 <PrintConfig
