@@ -9,24 +9,13 @@ import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 
 const mainVariant = {
-  initial: {
-    x: 0,
-    y: 0,
-  },
-  animate: {
-    x: 20,
-    y: -20,
-    opacity: 0.9,
-  },
+  initial: { x: 0, y: 0 },
+  animate: { x: 20, y: -20, opacity: 0.9 },
 };
 
 const secondaryVariant = {
-  initial: {
-    opacity: 0,
-  },
-  animate: {
-    opacity: 1,
-  },
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
 };
 
 export const FileUpload = ({
@@ -42,6 +31,11 @@ export const FileUpload = ({
       (file) => file.type === "application/pdf"
     );
 
+    if (validFiles.length !== newFiles.length) {
+      Swal.fire("Error", "Invalid Format. Only PDF files are allowed", "error");
+      return;
+    }
+
     const duplicateFiles = validFiles.filter((file) =>
       files.some((existingFile) => existingFile.name === file.name)
     );
@@ -51,32 +45,21 @@ export const FileUpload = ({
       return;
     }
 
-    if (validFiles.length !== newFiles.length) {
-      Swal.fire("Error", "Invalid Format. Only PDF files are allowed", "error");
-    }
-
     if (files.length + validFiles.length > 3) {
       Swal.fire("Error", "You can upload a maximum of 3 files.", "error");
       return;
     }
 
     setFiles((prevFiles) => [...prevFiles, ...validFiles]);
-    if (onChange) {
-      onChange(validFiles);
-    }
+    onChange?.(validFiles);
   };
 
-  const handleClick = () => {
-    fileInputRef.current?.click();
-  };
+  const handleClick = () => fileInputRef.current?.click();
 
   const { getRootProps, isDragActive } = useDropzone({
     multiple: false,
     noClick: true,
     onDrop: handleFileChange,
-    onDropRejected: (error) => {
-      console.log(error);
-    },
   });
 
   return (
@@ -97,18 +80,18 @@ export const FileUpload = ({
         />
         <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]"></div>
         <div className="flex flex-col items-center justify-center">
-          <p className="text-white relative z-20 font-sans font-bold  text-2xl">
+          <p className="text-white relative z-20 font-sans font-bold text-2xl">
             Upload File
           </p>
-          <p className="text-center relative z-20 font-sans font-normal text-white text-base mt-2 ">
+          <p className="text-center relative z-20 font-sans font-normal text-white text-base mt-2">
             Drag or drop your files here or click to upload
           </p>
           <div className="relative w-full mt-10 max-w-xl mx-auto">
-            {files.length > 0 &&
+            {files.length > 0 ? (
               files.map((file, idx) => (
                 <motion.div
-                  key={"file" + idx}
-                  layoutId={idx === 0 ? "file-upload" : "file-upload-" + idx}
+                  key={idx}
+                  layoutId={`file-upload-${idx}`}
                   className={cn(
                     "relative overflow-hidden z-40 bg-white dark:bg-gray-900 flex flex-col items-start justify-start md:h-24 p-4 mt-4 w-full mx-auto rounded-md",
                     "shadow-sm"
@@ -128,20 +111,19 @@ export const FileUpload = ({
                       animate={{ opacity: 1 }}
                       layout
                       className="rounded-lg px-2 py-1 w-fit flex-shrink-0 text-sm text-neutral-600 dark:bg-neutral-800 dark:text-white shadow-input"
-                    ></motion.p>
-                    {(file.size / (1024 * 1024)).toFixed(2)} MB
+                    >
+                      {(file.size / (1024 * 1024)).toFixed(2)} MB
+                    </motion.p>
                   </div>
-
                   <div className="flex text-sm md:flex-row flex-col items-start md:items-center w-full mt-2 justify-between text-neutral-600 dark:text-neutral-400">
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       layout
-                      className="px-1 py-0.5 rounded-md bg-gray-100 dark:bg-neutral-800 "
+                      className="px-1 py-0.5 rounded-md bg-gray-100 dark:bg-neutral-800"
                     >
                       {file.type}
                     </motion.p>
-
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -152,16 +134,12 @@ export const FileUpload = ({
                     </motion.p>
                   </div>
                 </motion.div>
-              ))}
-            {!files.length && (
+              ))
+            ) : (
               <motion.div
                 layoutId="file-upload"
                 variants={mainVariant}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className={cn(
                   "relative group-hover/file:shadow-2xl z-40 bg-black flex items-center justify-center h-32 mt-4 w-full max-w-[8rem] mx-auto rounded-md",
                   "shadow-[0px_10px_50px_rgba(0,0,0,0.1)]"
@@ -180,13 +158,6 @@ export const FileUpload = ({
                   <IconUpload className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
                 )}
               </motion.div>
-            )}
-
-            {!files.length && (
-              <motion.div
-                variants={secondaryVariant}
-                className="absolute opacity-0 border border-dashed border-sky-400 inset-0 z-30 bg-transparent flex items-center justify-center h-32 mt-4 w-full max-w-[8rem] mx-auto rounded-md"
-              ></motion.div>
             )}
           </div>
         </div>

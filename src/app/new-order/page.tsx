@@ -9,27 +9,23 @@ import {
   Add as AddIcon,
   Print as PrintIcon,
 } from "@mui/icons-material";
-
 import { useRouter } from "next/navigation";
-import { FileUpload } from "../../components/ui/FileUpload"; // Adjust the path to where your FileUpload component is
+import { FileUpload } from "../../components/ui/FileUpload";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-
-import CollageEditor from "../collageEditor/CollageEditor"; // Adjust the path to where your CollageEditor component is
-import PrintConfig from "../print-config/print-config"; // Adjust the path to where your PDFViewer component is
+import CollageEditor from "../collageEditor/CollageEditor";
+import PrintConfig from "../print-config/print-config";
 import useFileStore from "@/store/filesStore";
-// Adjust the path to where your PDFViewer component is
 
 export default function MyPrints() {
   const store = useFileStore();
-
   const [fileData, setFileData] = useState<{ file: File; config: any }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCollageEditorOpen, setIsCollageEditorOpen] = useState(false);
   const [collageImages, setCollageImages] = useState<File[]>([]);
   const router = useRouter();
+
   const fileConfigs = useMemo(() => {
     const configs: { [key: string]: any } = {};
     fileData.forEach(({ file, config }) => {
@@ -103,7 +99,6 @@ export default function MyPrints() {
     );
   }, []);
 
-  //current handle print function makes us to lose file data
   const handlePrint = useCallback(() => {
     if (fileData.length === 0) return;
 
@@ -119,6 +114,8 @@ export default function MyPrints() {
     }
 
     fileData.forEach(({ file, config }) => store.addFile(file, config));
+
+    // Ensure fileData is not cleared before navigation
     router.push(`/order-summary`);
   }, [fileData, store, router]);
 

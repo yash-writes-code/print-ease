@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Stage, Layer, Image as KonvaImage, Transformer } from "react-konva";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import React, { useState, useEffect } from "react";
+import { Rnd } from "react-rnd";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface CollageEditorProps {
   initialImages: File[];
@@ -18,54 +18,73 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
   onCancel,
 }) => {
   const [images, setImages] = useState<any[]>([]);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const stageRef = useRef<any>(null);
-  const trRef = useRef<any>(null);
+  const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [containerSize, setContainerSize] = useState({
+    width: 500,
+    height: 500,
+  });
 
   useEffect(() => {
-    const loadImages = async () => {
-      const imageObjects = await Promise.all(
-        initialImages.map((file) => {
-          return new Promise((resolve) => {
-            const url = URL.createObjectURL(file);
-            const img = new window.Image();
-            img.src = url;
-            img.onload = () => {
-              resolve({
-                id: file.name,
-                img,
-                x: 50,
-                y: 50,
-                width: 100,
-                height: 100,
-              });
-            };
-          });
-        })
-      );
-      setImages(imageObjects);
+    const imageObjects = initialImages.map((file, index) => ({
+      id: index,
+      url: URL.createObjectURL(file),
+      x: 50,
+      y: 50,
+      width: 150,
+      height: 150,
+    }));
+    setImages(imageObjects);
 
-      return () => {
-        imageObjects.forEach((img: any) => URL.revokeObjectURL(img.img.src));
-      };
+    return () => {
+      imageObjects.forEach((img) => URL.revokeObjectURL(img.url));
     };
-
-    loadImages();
   }, [initialImages]);
 
   useEffect(() => {
-    if (trRef.current && selectedImage) {
-      const selectedNode = stageRef.current.findOne(`#${selectedImage}`);
-      if (selectedNode) {
-        trRef.current.nodes([selectedNode]);
-        trRef.current.getLayer().batchDraw();
-      }
-    }
-  }, [selectedImage, images]);
+    const updateContainerSize = () => {
+      const width = window.innerWidth < 500 ? window.innerWidth - 20 : 500;
+      const height = window.innerHeight < 500 ? window.innerHeight - 20 : 500;
+      setContainerSize({ width, height });
+    };
+
+    updateContainerSize();
+    window.addEventListener("resize", updateContainerSize);
+
+    return () => {
+      window.removeEventListener("resize", updateContainerSize);
+    };
+  }, []);
+
+  const handleDragResize = (id: number, data: any) => {
+    setImages((prevImages) =>
+      prevImages.map((img) =>
+        img.id === id
+          ? {
+              ...img,
+              x: data.x,
+              y: data.y,
+              width: data.width,
+              height: data.height,
+            }
+          : img
+      )
+    );
+  };
+
+  const handleDeleteImage = () => {
+    if (selectedImage === null) return;
+    const deletedImg = images.find((img) => img.id === selectedImage);
+    if (deletedImg) URL.revokeObjectURL(deletedImg.url);
+    setImages(images.filter((img) => img.id !== selectedImage));
+    setSelectedImage(null);
+  };
 
   const handleExportCollage = async () => {
-    const stage = stageRef.current;
-    const dataURL = stage.toDataURL({ pixelRatio: 2 }); // Increases resolution
+    const collageElement = document.getElementById("collage-container");
+    if (!collageElement) return;
+
+    const canvas = await html2canvas(collageElement, { scale: 2 });
+    const dataURL = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
     const imgProps = pdf.getImageProperties(dataURL);
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -79,152 +98,199 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
     onSave(file);
   };
 
-  const handleDragMove = (id: string, e: any) => {
-    setImages((prevImages) =>
-      prevImages.map((img) =>
-        img.id === id ? { ...img, x: e.target.x(), y: e.target.y() } : img
-      )
+  const handleAddImage = (newFiles: File[]) => {
+    const validFiles = newFiles.filter(
+      (file) => file.type === "image/jpeg" || file.type === "image/png"
     );
-  };
 
-  const handleTransform = (id: string, e: any) => {
-    const node = e.target;
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
-    const newWidth = node.width() * scaleX;
-    const newHeight = node.height() * scaleY;
-    node.scaleX(1);
-    node.scaleY(1);
-    setImages((prevImages) =>
-      prevImages.map((img) =>
-        img.id === id
-          ? {
-              ...img,
-              x: node.x(),
-              y: node.y(),
-              width: newWidth,
-              height: newHeight,
-            }
-          : img
-      )
-    );
-  };
+    if (validFiles.length !== newFiles.length) {
+      Swal.fire(
+        "Error",
+        "Invalid Format. Only JPG and PNG files are allowed.",
+        "error"
+      );
+      return;
+    }
 
-  const handleDeleteImage = () => {
-    if (!selectedImage) return;
-    setImages(images.filter((image) => image.id !== selectedImage));
-    setSelectedImage(null);
+    const newImageObjects = validFiles.map((file) => ({
+      id: Date.now() + Math.random(),
+      url: URL.createObjectURL(file),
+      x: 50,
+      y: 50,
+      width: 150,
+      height: 150,
+    }));
+
+    setImages([...images, ...newImageObjects]);
   };
 
   const handleAlignImages = () => {
     const margin = 10;
-    if (images.length === 2) {
-      setImages([
-        { ...images[0], x: margin, y: margin, width: 240, height: 480 },
-        { ...images[1], x: 260, y: margin, width: 240, height: 480 },
-      ]);
-    } else if (images.length === 4) {
-      setImages([
-        { ...images[0], x: margin, y: margin, width: 240, height: 240 },
-        { ...images[1], x: 260, y: margin, width: 240, height: 240 },
-        { ...images[2], x: margin, y: 260, width: 240, height: 240 },
-        { ...images[3], x: 260, y: 260, width: 240, height: 240 },
-      ]);
-    } else {
+    const { width, height } = containerSize;
+    const halfWidth = (width - margin * 3) / 2;
+    const halfHeight = (height - margin * 3) / 2;
+    const thirdWidth = (width - margin * 3) / 2;
+    const thirdHeight = (height - margin * 3) / 2;
+
+    const layouts: {
+      [key: number]: { x: number; y: number; width: number; height: number }[];
+    } = {
+      2: [
+        { x: margin, y: margin, width: width - margin * 2, height: halfHeight },
+        {
+          x: margin,
+          y: halfHeight + margin * 2,
+          width: width - margin * 2,
+          height: halfHeight,
+        },
+      ],
+      3: [
+        { x: margin, y: margin, width: thirdWidth, height: thirdHeight },
+        {
+          x: thirdWidth + margin * 2,
+          y: margin,
+          width: thirdWidth,
+          height: thirdHeight,
+        },
+        {
+          x: width / 4,
+          y: thirdHeight + margin * 2,
+          width: width / 2,
+          height: thirdHeight,
+        },
+      ],
+      4: [
+        { x: margin, y: margin, width: halfWidth, height: halfHeight },
+        {
+          x: halfWidth + margin * 2,
+          y: margin,
+          width: halfWidth,
+          height: halfHeight,
+        },
+        {
+          x: margin,
+          y: halfHeight + margin * 2,
+          width: halfWidth,
+          height: halfHeight,
+        },
+        {
+          x: halfWidth + margin * 2,
+          y: halfHeight + margin * 2,
+          width: halfWidth,
+          height: halfHeight,
+        },
+      ],
+    };
+
+    if (!layouts[images.length]) {
       Swal.fire(
         "Error",
-        "Alignment is only supported for 2 or 4 images.",
+        "Alignment is only supported for 2, 3, or 4 images.",
         "error"
       );
+      return;
     }
+
+    setImages(
+      images.map((img, i) => ({ ...img, ...layouts[images.length][i] }))
+    );
   };
 
   return (
     <div className="w-screen flex flex-col items-center">
-      <Stage
-        width={500}
-        height={500}
-        ref={stageRef}
-        className="border border-gray-500 bg-gray-300"
-        onMouseDown={(e) => {
-          // Deselect when clicked on empty area
-          if (e.target === e.target.getStage()) {
-            setSelectedImage(null);
-          }
-        }}
+      <div
+        id="collage-container"
+        className="relative border border-gray-500 bg-gray-300"
+        style={{ width: containerSize.width, height: containerSize.height }}
       >
-        <Layer>
-          {images.map((image) => (
-            <React.Fragment key={image.id}>
-              <KonvaImage
-                id={image.id}
-                image={image.img}
-                x={image.x}
-                y={image.y}
-                width={image.width}
-                height={image.height}
-                draggable
-                onDragMove={(e) => handleDragMove(image.id, e)}
-                onTransformEnd={(e) => handleTransform(image.id, e)}
-                onClick={() => setSelectedImage(image.id)}
-              />
-              {selectedImage === image.id && (
-                <Transformer
-                  ref={trRef}
-                  resizeEnabled={true}
-                  rotateEnabled={true}
-                  enabledAnchors={[
-                    "top-left",
-                    "top-right",
-                    "bottom-left",
-                    "bottom-right",
-                    "middle-left",
-                    "middle-right",
-                    "top-center",
-                    "bottom-center",
-                  ]}
-                  boundBoxFunc={(oldBox, newBox) => {
-                    if (newBox.width < 50 || newBox.height < 50) {
-                      return oldBox;
-                    }
-                    return newBox;
-                  }}
-                />
-              )}
-            </React.Fragment>
-          ))}
-        </Layer>
-      </Stage>
-
-      <div className="flex mt-4 gap-4">
-        <button
-          onClick={handleExportCollage}
-          className="px-4 py-2 bg-green-500 text-white rounded"
-        >
-          Export Collage
-        </button>
-        {selectedImage && (
-          <button
-            onClick={handleDeleteImage}
-            className="px-4 py-2 bg-red-500 text-white rounded"
+        {images.map((image) => (
+          <Rnd
+            key={image.id}
+            size={{ width: image.width, height: image.height }}
+            position={{ x: image.x, y: image.y }}
+            bounds="parent"
+            onDragStop={(e, d) =>
+              handleDragResize(image.id, { ...image, x: d.x, y: d.y })
+            }
+            onResizeStop={(e, direction, ref, delta, position) =>
+              handleDragResize(image.id, {
+                ...image,
+                width: ref.offsetWidth,
+                height: ref.offsetHeight,
+                x: position.x,
+                y: position.y,
+              })
+            }
+            style={{
+              border: selectedImage === image.id ? "2px solid blue" : "none",
+              cursor: "grab",
+            }}
+            onClick={() => setSelectedImage(image.id)}
           >
-            <DeleteIcon /> Delete Image
-          </button>
-        )}
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 bg-gray-500 text-white rounded"
-        >
-          Cancel
-        </button>
-        {(images.length === 2 || images.length === 4) && (
+            <img
+              src={image.url}
+              alt="collage"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                pointerEvents: "none",
+              }}
+            />
+          </Rnd>
+        ))}
+      </div>
+
+      <div className="flex mt-4 gap-4 justify-between">
+        <div className="flex flex-col gap-2">
           <button
-            onClick={handleAlignImages}
+            onClick={handleExportCollage}
+            className="px-4 py-2 bg-green-500 text-white rounded"
+          >
+            Export Collage
+          </button>
+
+          {selectedImage !== null && (
+            <button
+              onClick={handleDeleteImage}
+              className="px-4 py-2 bg-red-500 text-white rounded"
+            >
+              <DeleteIcon /> Delete Image
+            </button>
+          )}
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-gray-500 text-white rounded"
+          >
+            Cancel
+          </button>
+        </div>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => document.getElementById("add-image")?.click()}
             className="px-4 py-2 bg-blue-500 text-white rounded"
           >
-            Align Images
+            <AddIcon /> Add Image
           </button>
-        )}
+          <input
+            id="add-image"
+            type="file"
+            accept=".jpg,.jpeg,.png"
+            multiple
+            onChange={(e) => handleAddImage(Array.from(e.target.files!))}
+            className="hidden"
+          />
+          {(images.length === 2 ||
+            images.length === 3 ||
+            images.length === 4) && (
+            <button
+              onClick={handleAlignImages}
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Align Images
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
