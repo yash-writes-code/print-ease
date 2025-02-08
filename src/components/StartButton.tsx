@@ -18,7 +18,7 @@ export default function StartButton() {
       onClick={handleStartClick}
       className="bg-black text-white px-8 py-4 rounded-full hover:bg-gray-800 transition-colors text-center mr-1"
     >
-      Drop your File / START
+      Print Now
     </button>
   );
 }
