@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
-
+import Razorpay from "razorpay"
 
 const client = await clientPromise;
 const db = client.db("PrintEase");
@@ -17,6 +17,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    //verify payment ID
+    // const instance = new Razorpay({ key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!, key_secret: process.env.NEXT_PUBLIC_RAZORPAY_KEY_SECRET!})
+    // console.log("here it comess------------");
+    
+    // const res=await instance.payments.fetch(body.paymentId);
+    // console.log(res);
+    
     // Insert into database
     const newPrintDoc = await PrintDocCollection.insertOne({
       userID: new ObjectId(body.userID),

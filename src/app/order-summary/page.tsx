@@ -74,7 +74,8 @@ export default function OrderSummary() {
               JSON.stringify(fileWithConfig.config)
             );
           });
-
+          //loader
+          Swal.showLoading();
           await axios.post("/api/file_upload", formData);
           Swal.fire("Success", "Payment successful", "success").then(() => {
             setLoading(true);
