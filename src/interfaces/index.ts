@@ -7,7 +7,7 @@ export interface Config {
     remarks: string;
     specificRange: string;
     totalPrice:number;
-    pageSize:number;
+    pageSize: number;
     configured?: boolean;
   };
 

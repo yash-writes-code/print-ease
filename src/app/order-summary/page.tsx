@@ -14,6 +14,7 @@ import useFileStore from "@/store/filesStore";
 import { Config } from "@/interfaces";
 import { useSession } from "next-auth/react";
 import { Spinner } from "@heroui/react";
+import PacmanLoader from "react-spinners/PacmanLoader";
 
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
@@ -56,24 +57,22 @@ export default function OrderSummary() {
         Swal.fire("Error", "Payment gateway not available", "error");
         return;
       }
-      const data = await axios.post("/api/razorpay/create_order",{
-        totalPrice:totalPrice
-      })
-      if(data.status == 500){
+      const data = await axios.post("/api/razorpay/create_order", {
+        totalPrice: totalPrice,
+      });
+      if (data.status == 500) {
         throw Error("internal server error");
       }
 
-      const {orderId,amount,currency} = data.data;
+      const { orderId, amount, currency } = data.data;
       const options = {
-        
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
         amount: amount,
         currency: currency,
         name: "PrintEase",
-        order_id:orderId,
+        order_id: orderId,
         description: "Order Payment",
         handler: async (response: any) => {
-
           //adding details to formdata and sending to backend
           const formData = new FormData();
           formData.append("paymentId", response.razorpay_payment_id);
@@ -87,15 +86,16 @@ export default function OrderSummary() {
             );
           });
           //loader
-          Swal.showLoading();
-          await axios.post("/api/razorpay/verify_payment",{
-            razorpay_order_id:response.razorpay_order_id,
-            razorpay_payment_id:response.razorpay_payment_id,
-            razorpay_signature : response.razorpay_signature
-          })
+
+          setLoading(true); // Ensure loading state is set to true
+          await axios.post("/api/razorpay/verify_payment", {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
           await axios.post("/api/file_upload", formData);
           Swal.fire("Success", "Payment successful", "success").then(() => {
-            setLoading(true);
+            setLoading(false); // Ensure loading state is set to false after success
             router.push(`/my-prints`);
           });
         },
@@ -120,12 +120,20 @@ export default function OrderSummary() {
   };
 
   return (
-    <div className="mt-[100px] max-w-2xl mx-auto p-6 rounded-lg bg-gray-900 dark:bg-gray-800 text-white">
-      {loading ? (
-        <div className="flex justify-center items-center">
-          <Spinner color="warning" label="Processing..." />
+    <div className="mt-[100px] max-w-2xl mx-auto p-6 rounded-lg bg-gray-900 dark:bg-gray-800 text-white relative">
+      {loading && (
+        <div className="fixed inset-0 z-50 flex justify-center items-center flex-col bg-black  bg-opacity-80">
+          <PacmanLoader
+            color="white"
+            loading={loading}
+            size={50}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          />
+          <p className="text-gray-400 font-thin mt-6">Please Wait...</p>
         </div>
-      ) : (
+      )}
+      {!loading && (
         <>
           <h1 className="text-2xl font-semibold mb-8">Order Summary</h1>
           <div className="space-y-4">
