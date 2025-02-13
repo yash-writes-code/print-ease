@@ -28,6 +28,7 @@ export default function OrderSummary() {
   const store = useFileStore();
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+
   const filesWithConfigs = store.filesWithConfigs;
   const totalPrice = filesWithConfigs.reduce(
     (sum, item) => sum + item.config.totalPrice,
@@ -55,14 +56,25 @@ export default function OrderSummary() {
         Swal.fire("Error", "Payment gateway not available", "error");
         return;
       }
+      const data = await axios.post("/api/razorpay/create_order",{
+        totalPrice:totalPrice
+      })
+      if(data.status == 500){
+        throw Error("internal server error");
+      }
 
+      const {orderId,amount,currency} = data.data;
       const options = {
+        
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
-        amount: totalPrice * 100,
-        currency: "INR",
+        amount: amount,
+        currency: currency,
         name: "PrintEase",
+        order_id:orderId,
         description: "Order Payment",
         handler: async (response: any) => {
+
+          //adding details to formdata and sending to backend
           const formData = new FormData();
           formData.append("paymentId", response.razorpay_payment_id);
           formData.append("user_id", session?.user?.id || "");
@@ -76,6 +88,11 @@ export default function OrderSummary() {
           });
           //loader
           Swal.showLoading();
+          await axios.post("/api/razorpay/verify_payment",{
+            razorpay_order_id:response.razorpay_order_id,
+            razorpay_payment_id:response.razorpay_payment_id,
+            razorpay_signature : response.razorpay_signature
+          })
           await axios.post("/api/file_upload", formData);
           Swal.fire("Success", "Payment successful", "success").then(() => {
             setLoading(true);
