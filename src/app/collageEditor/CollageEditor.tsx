@@ -3,12 +3,11 @@ import { Rnd } from "react-rnd";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import Swal from "sweetalert2";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import PacmanLoader from "react-spinners/PacmanLoader";
 
 interface CollageEditorProps {
   initialImages: File[];
-  onSave: (file: File) => void;
+  onSave: (collageElement: HTMLElement) => void;
   onCancel: () => void;
 }
 
@@ -23,6 +22,7 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
     width: 500,
     height: 500,
   });
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const imageObjects = initialImages.map((file, index) => ({
@@ -79,23 +79,16 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
     setSelectedImage(null);
   };
 
-  const handleExportCollage = async () => {
+  const handleExportCollage = () => {
     const collageElement = document.getElementById("collage-container");
-    if (!collageElement) return;
 
-    const canvas = await html2canvas(collageElement, { scale: 2 });
-    const dataURL = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgProps = pdf.getImageProperties(dataURL);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    // Check if there are images inside the collage
+    if (!collageElement || collageElement.children.length === 0) {
+      Swal.fire("Warning", "No images in the collage to export!", "warning");
+      return;
+    }
 
-    pdf.addImage(dataURL, "PNG", 0, 0, pdfWidth, pdfHeight);
-    const pdfBlob = pdf.output("blob");
-    const file = new File([pdfBlob], "collage.pdf", {
-      type: "application/pdf",
-    });
-    onSave(file);
+    onSave(collageElement); // Pass the collage element to the onSave function
   };
 
   const handleAddImage = (newFiles: File[]) => {
@@ -127,73 +120,37 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
   const handleAlignImages = () => {
     const margin = 10;
     const { width, height } = containerSize;
-    const halfWidth = (width - margin * 3) / 2;
-    const halfHeight = (height - margin * 3) / 2;
-    const thirdWidth = (width - margin * 3) / 2;
-    const thirdHeight = (height - margin * 3) / 2;
+    const numImages = images.length;
 
-    const layouts: {
-      [key: number]: { x: number; y: number; width: number; height: number }[];
-    } = {
-      2: [
-        { x: margin, y: margin, width: width - margin * 2, height: halfHeight },
-        {
-          x: margin,
-          y: halfHeight + margin * 2,
-          width: width - margin * 2,
-          height: halfHeight,
-        },
-      ],
-      3: [
-        { x: margin, y: margin, width: thirdWidth, height: thirdHeight },
-        {
-          x: thirdWidth + margin * 2,
-          y: margin,
-          width: thirdWidth,
-          height: thirdHeight,
-        },
-        {
-          x: width / 4,
-          y: thirdHeight + margin * 2,
-          width: width / 2,
-          height: thirdHeight,
-        },
-      ],
-      4: [
-        { x: margin, y: margin, width: halfWidth, height: halfHeight },
-        {
-          x: halfWidth + margin * 2,
-          y: margin,
-          width: halfWidth,
-          height: halfHeight,
-        },
-        {
-          x: margin,
-          y: halfHeight + margin * 2,
-          width: halfWidth,
-          height: halfHeight,
-        },
-        {
-          x: halfWidth + margin * 2,
-          y: halfHeight + margin * 2,
-          width: halfWidth,
-          height: halfHeight,
-        },
-      ],
-    };
-
-    if (!layouts[images.length]) {
+    if (numImages < 2 || numImages > 6) {
       Swal.fire(
         "Error",
-        "Alignment is only supported for 2, 3, or 4 images.",
+        "Alignment is only supported for 2 to 6 images.",
         "error"
       );
       return;
     }
 
-    setImages(
-      images.map((img, i) => ({ ...img, ...layouts[images.length][i] }))
-    );
+    // Calculate grid dimensions (rows & cols)
+    const cols = Math.ceil(Math.sqrt(numImages));
+    const rows = Math.ceil(numImages / cols);
+
+    const cellWidth = (width - (cols + 1) * margin) / cols;
+    const cellHeight = (height - (rows + 1) * margin) / rows;
+
+    // Generate grid layout
+    const layout = images.map((_, i) => {
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+      return {
+        x: margin + col * (cellWidth + margin),
+        y: margin + row * (cellHeight + margin),
+        width: cellWidth,
+        height: cellHeight,
+      };
+    });
+
+    setImages(images.map((img, i) => ({ ...img, ...layout[i] })));
   };
 
   return (
@@ -241,6 +198,13 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
         ))}
       </div>
 
+      {isExporting && (
+        <div className="fixed inset-0 z-50 flex justify-center items-center flex-col bg-black bg-opacity-80">
+          <PacmanLoader color="white" loading={isExporting} size={50} />
+          <p className="text-gray-400 font-thin mt-6">Exporting Collage...</p>
+        </div>
+      )}
+
       <div className="flex mt-4 gap-4 justify-between">
         <div className="flex flex-col gap-2">
           <button
@@ -280,16 +244,13 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
             onChange={(e) => handleAddImage(Array.from(e.target.files!))}
             className="hidden"
           />
-          {(images.length === 2 ||
-            images.length === 3 ||
-            images.length === 4) && (
-            <button
-              onClick={handleAlignImages}
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-            >
-              Align Images
-            </button>
-          )}
+
+          <button
+            onClick={handleAlignImages}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Align Images
+          </button>
         </div>
       </div>
     </div>

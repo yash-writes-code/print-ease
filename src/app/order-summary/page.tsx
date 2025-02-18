@@ -13,8 +13,8 @@ import axios from "axios";
 import useFileStore from "@/store/filesStore";
 import { Config } from "@/interfaces";
 import { useSession } from "next-auth/react";
-import { Spinner } from "@heroui/react";
 import PacmanLoader from "react-spinners/PacmanLoader";
+import { FlipWords } from "@/components/ui/Flip-Words";
 
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
@@ -115,7 +115,6 @@ export default function OrderSummary() {
   };
 
   const handleGoBack = () => {
-    store.clearAll();
     router.push("/new-order");
   };
 
@@ -130,7 +129,10 @@ export default function OrderSummary() {
             aria-label="Loading Spinner"
             data-testid="loader"
           />
-          <p className="text-gray-400 font-thin mt-6">Please Wait...</p>
+          <FlipWords
+            words={["Uploading Files", "Fetching Data", "Proceeding to Print"]}
+            className="text-gray-700 font-extralight mt-6"
+          ></FlipWords>
         </div>
       )}
       {!loading && (
