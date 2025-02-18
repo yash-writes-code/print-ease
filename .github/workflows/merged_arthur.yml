@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci  # Use npm ci for clean installs
 
+      - name: Add next to PATH
+        run: echo "::add-path::./node_modules/.bin"
+
       - name: Build Next.js app
         env:
           NEXT_PUBLIC_MONGODB_URI: ${{ secrets.NEXT_PUBLIC_MONGODB_URI }}
