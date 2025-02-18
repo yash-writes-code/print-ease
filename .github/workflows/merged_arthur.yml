@@ -25,10 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci  # Use npm ci for clean installs
 
-
       - name: Build Next.js app
         env:
-         NEXT_PUBLIC_MONGODB_URI: ${{ secrets.NEXT_PUBLIC_MONGODB_URI }}
+          NEXT_PUBLIC_MONGODB_URI: ${{ secrets.NEXT_PUBLIC_MONGODB_URI }}
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
