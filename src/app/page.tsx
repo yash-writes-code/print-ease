@@ -13,7 +13,7 @@ export default function Home() {
         <div className="relative z-10 flex justify-center items-center flex-col">
           <TypewriterEffectSmooth
             words={[{ text: "PrintHub for DTU" }]}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-10 text-center"
+            className=" mb-10 text-center"
           />
           <h2 className="text-2xl font-medium mb-8 text-center">
             Print{" "}

@@ -9,7 +9,7 @@ export default function StartButton() {
     if (!session) {
       await signIn("google");
     } else {
-      window.location.href = "/new-order";
+      window.location.href = "/Start";
     }
   };
 
