@@ -28,18 +28,19 @@ jobs:
 
       - name: Build Next.js app
         env:
-          NEXT_PUBLIC_MONGODB_URI: ${{ secrets.NEXT_PUBLIC_MONGODB_URI }}
+         NEXT_PUBLIC_MONGODB_URI: ${{ secrets.NEXT_PUBLIC_MONGODB_URI }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
           AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
-          RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID }}
-          RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET }}
-          ACCOUNT_NAME: ${{ secrets.ACCOUNT_NAME }}
+          NEXT_PUBLIC_RAZORPAY_KEY_ID: ${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+          NEXT_PUBLIC_RAZORPAY_KEY_SECRET: ${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_SECRET }}
+          NEXT_PUBLIC_ACCOUNT_NAME: ${{ secrets.NEXT_PUBLIC_ACCOUNT_NAME }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          BASE_URL: ${{ secrets.BASE_URL }}
+          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
         run: npm run build
 
       # - name: Export Next.js app (if using `next export`)
