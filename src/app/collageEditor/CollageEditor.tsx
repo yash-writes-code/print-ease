@@ -79,16 +79,25 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
     setSelectedImage(null);
   };
 
-  const handleExportCollage = () => {
+  const handleExportCollage = async () => {
     const collageElement = document.getElementById("collage-container");
 
-    // Check if there are images inside the collage
     if (!collageElement || collageElement.children.length === 0) {
       Swal.fire("Warning", "No images in the collage to export!", "warning");
       return;
     }
 
-    onSave(collageElement); // Pass the collage element to the onSave function
+    setIsExporting(true); // Show the loader
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Ensure UI updates
+      await onSave(collageElement);
+    } catch (error) {
+      console.error("Error exporting collage:", error);
+      Swal.fire("Error", "Failed to export collage. Try again!", "error");
+    } finally {
+      setIsExporting(false); // Hide the loader
+    }
   };
 
   const handleAddImage = (newFiles: File[]) => {
