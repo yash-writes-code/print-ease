@@ -28,8 +28,8 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
     const imageObjects = initialImages.map((file, index) => ({
       id: index,
       url: URL.createObjectURL(file),
-      x: 50,
-      y: 50,
+      x: index * 20, // Slight shift for each photo
+      y: index * 20,
       width: 150,
       height: 150,
     }));
@@ -114,11 +114,11 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
       return;
     }
 
-    const newImageObjects = validFiles.map((file) => ({
+    const newImageObjects = validFiles.map((file, index) => ({
       id: Date.now() + Math.random(),
       url: URL.createObjectURL(file),
-      x: 50,
-      y: 50,
+      x: (images.length + index) * 20, // Slight shift for each new photo
+      y: (images.length + index) * 20,
       width: 150,
       height: 150,
     }));
