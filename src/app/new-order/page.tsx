@@ -19,6 +19,7 @@ import useFileStore from "@/store/filesStore";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import PacmanLoader from "react-spinners/PacmanLoader";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 
 export default function MyPrints() {
   const store = useFileStore();
@@ -89,6 +90,7 @@ export default function MyPrints() {
         icon: "success",
       }).then(() => {
         window.scrollTo(0, 0);
+        setSelectedFile(null);
       });
 
       return [
@@ -313,9 +315,11 @@ export default function MyPrints() {
             <span>
               {file.name}{" "}
               {fileData.find((item) => item.file.name === file.name)?.config
-                .configured
-                ? "(configured)"
-                : ""}
+                .configured ? (
+                <TaskAltIcon className="text-green-500" />
+              ) : (
+                ""
+              )}
             </span>
             <button
               onClick={(e) => {
