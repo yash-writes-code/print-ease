@@ -1,8 +1,5 @@
 import mongoose, {Schema, Document} from "mongoose";
-import UserProfileModel from "./UserProfile";
-import FileModel from "./File";
-import StoreModel from "./Store";
-
+import { generate_otp } from "@/utils/generate_otp";
 
 export interface PrintDoc extends Document{
     userID: mongoose.Types.ObjectId;
@@ -13,6 +10,7 @@ export interface PrintDoc extends Document{
     cost: number;
     createdAt: Date;
     paymentId:string;
+    otp:string;
 }
 
 const PrintDocSchema: Schema<PrintDoc> = new Schema({
@@ -51,6 +49,11 @@ const PrintDocSchema: Schema<PrintDoc> = new Schema({
     paymentId:{
         type:String,
         required : true
+    },
+    otp:{
+        type:String,
+        required:true,
+        default:"A0"      
     }
 })
 

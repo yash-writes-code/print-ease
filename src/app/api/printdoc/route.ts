@@ -1,8 +1,7 @@
-
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
-import Razorpay from "razorpay"
+import { generate_otp } from "@/utils/generate_otp";
 
 const client = await clientPromise;
 const db = client.db("PrintEase");
@@ -23,6 +22,8 @@ export async function POST(req: Request) {
     
     // const res=await instance.payments.fetch(body.paymentId);
     // console.log(res);
+    const otp = await generate_otp();
+    console.log("otp generated is:" , otp);
     
     // Insert into database
     const newPrintDoc = await PrintDocCollection.insertOne({
@@ -34,8 +35,10 @@ export async function POST(req: Request) {
       cost: body.cost,
       createdAt: new Date(),
       paymentId: body.paymentId,
+      otp:otp
     });
 
+    
     return NextResponse.json({ message: "PrintDoc created successfully", id: newPrintDoc.insertedId }, { status: 201 });
   } catch (error) {
     console.error("Error creating PrintDoc:", error);

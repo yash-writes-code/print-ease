@@ -262,6 +262,7 @@ export default function MyPrints() {
           totalPrice: 0,
           pageSize: 0,
           configured: false,
+          pageType:"normal"
         }); // Add the collage PDF to the store with a default config
 
         Swal.fire("Success", "Collage Saved", "success").then(() => {
