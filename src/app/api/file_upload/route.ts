@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
         sided:config.sided,
         remarks:config.remarks,
         copies:config.copies,
+        pageType:config.pageType,
         specificRange:config.specificRange,
         pagesToPrint :config.pagesToPrint,
       })

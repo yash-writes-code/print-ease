@@ -4,6 +4,7 @@ export interface Config {
     pagesToPrint: "all" | "specific";
     sided: "single" | "double";
     copies: number;
+    pageType:string,
     remarks: string;
     specificRange: string;
     totalPrice:number;

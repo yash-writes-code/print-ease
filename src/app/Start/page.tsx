@@ -45,6 +45,7 @@ const Start = () => {
         totalPrice: 0,
         pageSize: 0,
         configured: false,
+        pageType:"A4"
       });
     });
 
@@ -109,6 +110,7 @@ const Start = () => {
           totalPrice: 0,
           pageSize: 0,
           configured: false,
+          pageType:"A4"
         });
 
         await Swal.fire("Success", "Collage Saved", "success");
