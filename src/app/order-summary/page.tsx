@@ -15,6 +15,7 @@ import { Config } from "@/interfaces";
 import { useSession } from "next-auth/react";
 import PacmanLoader from "react-spinners/PacmanLoader";
 import { FlipWords } from "@/components/ui/Flip-Words";
+import { SubscribePush } from "@/components/SubscribePush";
 
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
@@ -98,7 +99,7 @@ export default function OrderSummary() {
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
           });
-          await axios.post("/api/file_upload", formData);
+          await axios.post("/api/file_upload", formData,{withCredentials:true});
           Swal.fire("Success", "Payment successful", "success").then(() => {
             setLoading(false);
             router.push(`/my-prints`);
@@ -125,6 +126,8 @@ export default function OrderSummary() {
   };
 
   return (
+    <>
+    <SubscribePush/>
     <div className="mt-[100px] max-w-2xl mx-auto p-6 rounded-lg bg-gray-900 dark:bg-gray-800 text-white relative">
       {loading && (
         <div className="fixed inset-0 z-50 flex justify-center items-center flex-col bg-black bg-opacity-80">
@@ -176,6 +179,7 @@ export default function OrderSummary() {
         </>
       )}
     </div>
+    </>
   );
 }
 

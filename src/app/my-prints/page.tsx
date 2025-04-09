@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { format } from "date-fns";
 
+
 interface OrderDetails {
   date: Date;
   status: string;
@@ -20,9 +21,10 @@ export default function OrderHistory() {
   const { data: session } = useSession();
   const [orderDetails, setOrderDetails] = useState<OrderDetails[]>([]);
 
+
   useEffect(() => {
     if (!session?.user?.id) return;
-
+  
     const fetchOrders = async () => {
       try {
         const { data } = await axios.get(
@@ -51,6 +53,8 @@ export default function OrderHistory() {
   }
 
   return (
+    <>
+    
     <div className="min-h-screen p-2 sm:p-4 mt-20">
       <BackgroundGradient className="p-2">
         <div className="bg-gray-900 rounded-lg sm:rounded-[22px] p-3 sm:p-10 relative z-10">
@@ -121,5 +125,6 @@ export default function OrderHistory() {
         </div>
       </BackgroundGradient>
     </div>
+    </>
   );
 }

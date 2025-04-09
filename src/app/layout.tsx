@@ -1,8 +1,9 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter, Permanent_Marker, Poppins } from "next/font/google";
-import Navbar from "../components/Navbar";
+import Nav from "@/components/home/Nav";
 import { SessionProvider } from "next-auth/react";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const inter = Inter({ subsets: ["latin"] });
 const permanentMarker = Permanent_Marker({ subsets: ["latin"], weight: "400" });
@@ -24,8 +25,9 @@ export default function RootLayout({
         className={`${inter.className} ${permanentMarker.className} ${poppins.className}`}
       >
         <SessionProvider>
-          <Navbar />
-          <main className="bg-black container auto px-4 py-8">{children}</main>
+          <Nav/>
+          <ServiceWorkerRegister></ServiceWorkerRegister>
+          <main className="bg-black w-full">{children}</main>
         </SessionProvider>
       </body>
     </html>
