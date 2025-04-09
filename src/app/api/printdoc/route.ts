@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
 import { generate_otp } from "@/utils/generate_otp";
+import axios from "axios";
+import {auth} from "@/lib/auth"
 
 const client = await clientPromise;
 const db = client.db("PrintEase");
@@ -10,12 +12,19 @@ const PrintDocCollection = db.collection("PrintDoc");
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
+  
+    
+    
     // Validate request body
     if (!body.userID || !body.fileID || !body.storeID || !body.status || !body.type || !body.cost || !body.paymentId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    if(!body.email){
+      console.log("user email not found");
+    }
+    console.log(body.email);
+    
     //verify payment ID
     // const instance = new Razorpay({ key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!, key_secret: process.env.NEXT_PUBLIC_RAZORPAY_KEY_SECRET!})
     // console.log("here it comess------------");
@@ -37,7 +46,23 @@ export async function POST(req: Request) {
       paymentId: body.paymentId,
       otp:otp
     });
+    
 
+    
+    const notification_res = await axios.post(process.env.NEXT_PUBLIC_BASE_URL+"/api/notify-user",{
+      userEmail:body.email,
+      title:"Your print job is added to the queue",
+      body: "You will be notified when the job is done"
+    });
+    if(notification_res.status == 500){
+      console.log("kuch err aagya notification bhejne me");
+      console.log(notification_res.data);
+    }
+    else{
+      console.log("notification chli gyi yayyyy");
+
+    }
+    //notify user that it is completed uploading
     
     return NextResponse.json({ message: "PrintDoc created successfully", id: newPrintDoc.insertedId }, { status: 201 });
   } catch (error) {

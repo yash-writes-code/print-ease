@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import axios from "axios";
 import { Config } from "@/interfaces";
 import { uploadFileToAzure } from "@/lib/server/utils";
+import {auth} from "@/lib/auth"
 
 export const config = {
   api: {
@@ -35,7 +36,12 @@ export async function POST(req: NextRequest) {
   try {
     // Parse FormData from the request
     const formData = await req.formData();
-
+    
+    const session = await auth();
+    const user = session!.user;
+    // console.log(user);
+    
+    
     // Extract paymentId, userId, and storeId
     const paymentId = formData.get("paymentId") as string;
     const userId = formData.get("user_id") as string;
@@ -94,6 +100,7 @@ export async function POST(req: NextRequest) {
       type: "print",
       cost: cost,
       paymentId: paymentId,
+      email:session!.user!.email!
     });
     
     console.log("printdoc instance created");
