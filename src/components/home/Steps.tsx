@@ -1,5 +1,5 @@
 // components/HowItWorksSteps.tsx
-"use-client"
+"use client"
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 

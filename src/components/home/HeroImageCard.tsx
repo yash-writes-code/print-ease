@@ -14,7 +14,7 @@ const HeroImageCard = () => {
   
           <div className="p-6">
             <img
-              src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+              src="/3411083.jpg"
               alt="Professional using PrintEase service"
               className="w-full h-auto rounded object-cover"
              
