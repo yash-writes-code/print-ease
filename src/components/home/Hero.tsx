@@ -1,6 +1,7 @@
 // components/HeroSection.jsx
 "use client"
 import { ArrowRightIcon, UploadIcon, CreditCardIcon, BellIcon } from "lucide-react"
+import Link from "next/link"
 
 export default function HeroSection() {
   return (
@@ -20,7 +21,9 @@ export default function HeroSection() {
           <div className="mt-8 flex gap-4">
             <button className="inline-flex items-center px-6 py-3 rounded-lg bg-gradient-to-r from-[#4B6BFB] to-[#9747FF] text-white font-semibold shadow-lg hover:scale-105 transition-transform">
               <UploadIcon className="h-5 w-5 mr-2" />
+              <Link href={"/Start"}>
               Start Printing
+              </Link>
               <ArrowRightIcon className="h-5 w-5 ml-2" />
             </button>          
           </div>
