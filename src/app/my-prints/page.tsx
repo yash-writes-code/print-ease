@@ -1,14 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import { BackgroundGradient } from "@/components/ui/BackgroundGradient";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { format } from "date-fns";
-import {redirect} from "next/navigation";
 import PacmanLoader from "react-spinners/PacmanLoader";
+import { useRouter } from "next/navigation";
 
 interface OrderDetails {
   date: Date;
@@ -19,33 +18,23 @@ interface OrderDetails {
 }
 
 export default function OrderHistory() {
- 
   const [orderDetails, setOrderDetails] = useState<OrderDetails[]>([]);
   const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Redirect if unauthenticated
   useEffect(() => {
     if (status === "unauthenticated") {
-      return (
-        redirect("/signin")
-      );
+      router.push("/signin");
     }
-  }, [status]);
+  }, [status, router]);
 
-  if (status === "loading")
-    return <PacmanLoader/>;
-
-  if (!session) {
-    return (
-      redirect("/signin")
-    );
-  }
-
+  // Fetch orders once session is available
   useEffect(() => {
-    
-  
     const fetchOrders = async () => {
       try {
         const { data } = await axios.get(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/printdoc?user_id=${session.user?.id}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/printdoc?user_id=${session?.user?.id}`
         );
 
         const transformedOrders: OrderDetails[] = data.map((order: any) => ({
@@ -62,14 +51,21 @@ export default function OrderHistory() {
       }
     };
 
-    fetchOrders();
+    if (session) {
+      fetchOrders();
+    }
   }, [session]);
 
-
+  // ✅ Instead of returning early, render a loader as fallback UI
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <PacmanLoader color="#fff" />
+      </div>
+    );
+  }
 
   return (
-    <>
-    
     <div className="min-h-screen p-2 sm:p-4 mt-20">
       <BackgroundGradient className="p-2">
         <div className="bg-gray-900 rounded-lg sm:rounded-[22px] p-3 sm:p-10 relative z-10">
@@ -140,6 +136,5 @@ export default function OrderHistory() {
         </div>
       </BackgroundGradient>
     </div>
-    </>
   );
 }

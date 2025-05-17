@@ -34,42 +34,39 @@ export default function OrderSummary() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      return (
-        redirect("/signin")
-      );
+      router.push("/signin");
     }
-  }, [status]);
+  }, [status,router]);
 
-  if (status === "loading")
-    return <PacmanLoader/>;
-
-  if (!session) {
-    return (
-      redirect("/signin")
-    );
-  }
-  else{
+  // if (!session) {
+  //   return (
+  //     redirect("/signin")
+  //   );
+  // }
+  useEffect(()=>{
+    if(!session) return;
     const loadScript = async () => {
       if (
         !document.querySelector(
           'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
-        )
-      ) {
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        document.body.appendChild(script);
-      }
-    };
-    loadScript();
-  }
-  const filesWithConfigs = store.filesWithConfigs;
-  const totalPrice = filesWithConfigs.reduce(
-    (sum, item) => sum + item.config.totalPrice,
-    0
-  );
-
-
-
+          )
+          ) {
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            document.body.appendChild(script);
+          }
+        };
+        loadScript();
+        
+        
+      })
+      
+      const filesWithConfigs = store.filesWithConfigs;
+      const totalPrice = filesWithConfigs.reduce(
+        (sum, item) => sum + item.config.totalPrice,
+        0
+        );
+        
 
   const handlePayment = async () => {
     try {
@@ -150,7 +147,14 @@ export default function OrderSummary() {
   const handleGoBack = () => {
     router.push("/new-order");
   };
-
+  
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <PacmanLoader color="#fff" />
+      </div>
+    );
+  }
   return (
     <>
       <SubscribePush />

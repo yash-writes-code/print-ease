@@ -35,23 +35,15 @@ export default function MyPrints() {
   const { data: session, status } = useSession();
   useEffect(() => {
     if (status === "unauthenticated") {
-      return (
-        redirect("/signin")
-      );
+      router.push("/signin");
     }
-  }, [status]);
+  }, [status,router]);
 
-  if (status === "loading")
-    return <PacmanLoader/>;
-
-  if (!session) {
-    return (
-      redirect("/signin")
-    );
-  }
+  
   useEffect(() => {
+    if(!session) return;
     setFileData(store.filesWithConfigs);
-  }, [store.filesWithConfigs]);
+  }, [session,store.filesWithConfigs]);
 
   const fileConfigs = useMemo(() => {
     return Object.fromEntries(
@@ -314,7 +306,16 @@ export default function MyPrints() {
     setIsCollageEditorOpen(true);
   }, []);
 
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <PacmanLoader color="#fff" />
+      </div>
+    );
+  }
+
   return (
+
     <div className={`bg-gray-800  max-w-2xl mx-auto p-6 mt-10`}>
       <div className="space-y-4">
         <h2 className="text-xl text-white font-semibold mb-4">
