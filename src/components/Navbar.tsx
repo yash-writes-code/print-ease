@@ -49,6 +49,14 @@ export default function NavbarComponent() {
               Home
             </Link>
             <Link
+              href="/Start"
+              className={`${
+                pathname === "/Start" ? "text-blue-600" : "text-gray-600"
+              } hover:text-blue-600 transition-colors`}
+            >
+              Upload-File
+            </Link>
+            <Link
               href={session ? "/my-prints" : "#"}
               className={`${
                 pathname === "/my-prints" ? "text-blue-600" : "text-gray-600"

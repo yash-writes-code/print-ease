@@ -4,6 +4,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import Swal from "sweetalert2";
 import PacmanLoader from "react-spinners/PacmanLoader";
+import Image from "next/image";
 
 interface CollageEditorProps {
   initialImages: File[];
@@ -23,13 +24,13 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
     height: 500,
   });
   const [isExporting, setIsExporting] = useState(false);
-
+  
   useEffect(() => {
     const imageObjects = initialImages.map((file, index) => ({
       id: index,
       url: URL.createObjectURL(file),
-      x: 50,
-      y: 50,
+      x: index * 20, // Slight shift for each photo
+      y: index * 20,
       width: 150,
       height: 150,
     }));
@@ -79,16 +80,25 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
     setSelectedImage(null);
   };
 
-  const handleExportCollage = () => {
+  const handleExportCollage = async () => {
     const collageElement = document.getElementById("collage-container");
 
-    // Check if there are images inside the collage
     if (!collageElement || collageElement.children.length === 0) {
       Swal.fire("Warning", "No images in the collage to export!", "warning");
       return;
     }
 
-    onSave(collageElement); // Pass the collage element to the onSave function
+    setIsExporting(true); // Show the loader
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Ensure UI updates
+      await onSave(collageElement);
+    } catch (error) {
+      console.error("Error exporting collage:", error);
+      Swal.fire("Error", "Failed to export collage. Try again!", "error");
+    } finally {
+      setIsExporting(false); // Hide the loader
+    }
   };
 
   const handleAddImage = (newFiles: File[]) => {
@@ -105,11 +115,11 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
       return;
     }
 
-    const newImageObjects = validFiles.map((file) => ({
+    const newImageObjects = validFiles.map((file, index) => ({
       id: Date.now() + Math.random(),
       url: URL.createObjectURL(file),
-      x: 50,
-      y: 50,
+      x: (images.length + index) * 20, // Slight shift for each new photo
+      y: (images.length + index) * 20,
       width: 150,
       height: 150,
     }));
@@ -184,7 +194,7 @@ const CollageEditor: React.FC<CollageEditorProps> = ({
             }}
             onClick={() => setSelectedImage(image.id)}
           >
-            <img
+            <Image
               src={image.url}
               alt="collage"
               style={{

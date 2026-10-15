@@ -4,7 +4,8 @@ import mongoose from "mongoose";
 // import PrintDoc from "@/app/models/PrintDoc"; // Adjust import path for your PrintDoc model
 import axios from "axios";
 import { Config } from "@/interfaces";
-import { uploadFileToAzure } from "@/lib/server/utils";
+import { uploadFileToCloudinary } from "@/lib/server/utils";
+import {auth} from "@/lib/auth"
 
 export const config = {
   api: {
@@ -35,7 +36,12 @@ export async function POST(req: NextRequest) {
   try {
     // Parse FormData from the request
     const formData = await req.formData();
-
+    
+    const session = await auth();
+    const user = session!.user;
+    // console.log(user);
+    
+    
     // Extract paymentId, userId, and storeId
     const paymentId = formData.get("paymentId") as string;
     const userId = formData.get("user_id") as string;
@@ -62,7 +68,7 @@ export async function POST(req: NextRequest) {
     for (const { file, config } of filesWithConfigs) {
   
       console.log(`Uploading file: ${file.name} with config:`, config);
-      const link = await uploadFileToAzure(file);
+      const link = await uploadFileToCloudinary(file);
       cost += config.totalPrice;
 
       const url=process.env.NEXT_PUBLIC_BASE_URL+'/api/file';
@@ -75,6 +81,7 @@ export async function POST(req: NextRequest) {
         sided:config.sided,
         remarks:config.remarks,
         copies:config.copies,
+        pageType:config.pageType,
         specificRange:config.specificRange,
         pagesToPrint :config.pagesToPrint,
       })
@@ -93,6 +100,7 @@ export async function POST(req: NextRequest) {
       type: "print",
       cost: cost,
       paymentId: paymentId,
+      email:session!.user!.email!
     });
     
     console.log("printdoc instance created");

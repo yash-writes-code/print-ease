@@ -315,6 +315,25 @@ export default function PrintConfig({
             disabled={!config.color} // Disable input if color mode is not selected
           />
         </div>
+        
+        {/* Page Type */}
+        <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">
+  <h2 className="font-semibold mb-4 text-white">Page Type</h2>
+  <select
+    className="w-full p-2 border border-gray-600 rounded-lg bg-gray-800 text-white"
+    value={config.pageType}
+    onChange={(e) =>
+      setConfig({
+        ...config,
+        pageType: e.target.value,
+      })
+    }
+  >
+    <option value="a4">A4 Paper</option>
+    <option value="glossy">Glossy Paper</option>
+  </select>
+</div>
+
 
         {/* Remarks */}
         <div className="p-4 border bg-gray-800 border-gray-700 rounded-lg">

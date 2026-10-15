@@ -10,7 +10,6 @@ import {
   Print as PrintIcon,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
-
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import CollageEditor from "../collageEditor/CollageEditor";
@@ -19,6 +18,10 @@ import useFileStore from "@/store/filesStore";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import PacmanLoader from "react-spinners/PacmanLoader";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import Image from "next/image";
+import {useSession} from "next-auth/react";
+import {redirect} from "next/navigation";
 
 export default function MyPrints() {
   const store = useFileStore();
@@ -29,40 +32,52 @@ export default function MyPrints() {
   const [collageImages, setCollageImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
+  const { data: session, status } = useSession();
   useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+    }
+  }, [status,router]);
+
+  
+  useEffect(() => {
+    if(!session) return;
     setFileData(store.filesWithConfigs);
-  }, [store.filesWithConfigs]);
+  }, [session,store.filesWithConfigs]);
 
   const fileConfigs = useMemo(() => {
-    const configs: { [key: string]: any } = {};
-    fileData.forEach(({ file, config }) => {
-      configs[file.name] = config;
-    });
-    return configs;
+    return Object.fromEntries(
+      fileData.map(({ file, config }) => [file.name, config])
+    );
   }, [fileData]);
 
-  const handleFileUpload = useCallback(
-    (newFiles: File[]) => {
-      const existingFiles = fileData.map((item) => item.file.name);
+  const handleFileUpload = useCallback((newFiles: File[]) => {
+    setFileData((prevFileData) => {
+      const existingFilesSet = new Set(
+        prevFileData.map((item) => item.file.name)
+      );
       const duplicateFiles = newFiles.filter((file) =>
-        existingFiles.includes(file.name)
+        existingFilesSet.has(file.name)
       );
 
       if (duplicateFiles.length > 0) {
-        Swal.fire(
-          "Error",
-          `The following files are already uploaded: ${duplicateFiles
+        Swal.fire({
+          title: "Duplicate Files",
+          text: `These files are already uploaded:\n${duplicateFiles
             .map((file) => file.name)
             .join(", ")}`,
-          "error"
-        );
-        return;
+          icon: "warning",
+        });
+        return prevFileData; // Prevent updating state
       }
 
-      if (fileData.length + newFiles.length > 3) {
-        Swal.fire("Error", "You can upload a maximum of 3 files.", "error");
-        return;
+      if (prevFileData.length + newFiles.length > 3) {
+        Swal.fire({
+          title: "File Limit Exceeded",
+          text: "You can upload a maximum of 3 files.",
+          icon: "error",
+        });
+        return prevFileData;
       }
 
       const validFiles = newFiles.filter(
@@ -71,16 +86,25 @@ export default function MyPrints() {
       );
 
       if (validFiles.length !== newFiles.length) {
-        Swal.fire(
-          "Error",
-          "Invalid Format or File Size. Only PDF files under 30MB are allowed.",
-          "error"
-        );
-        return;
+        Swal.fire({
+          title: "Invalid File",
+          text: "Only PDF files under 30MB are allowed.",
+          icon: "error",
+        });
+        return prevFileData;
       }
 
-      setFileData((prev) => [
-        ...prev,
+      Swal.fire({
+        title: "Success",
+        text: "File Uploaded Successfully!",
+        icon: "success",
+      }).then(() => {
+        window.scrollTo(0, 0);
+        setSelectedFile(null);
+      });
+
+      return [
+        ...prevFileData,
         ...validFiles.map((file) => ({
           file,
           config: {
@@ -92,28 +116,35 @@ export default function MyPrints() {
             specificRange: "",
           },
         })),
-      ]);
-
-      Swal.fire("Success", "File Uploaded", "success").then(() => {
-        window.scrollTo(0, 0);
-      });
-    },
-    [fileData]
-  );
+      ];
+    });
+  }, []);
 
   const handleFileDelete = useCallback(
     (fileToDelete: File) => {
-      setFileData((prev) => {
-        const updatedFiles = prev.filter(({ file }) => file !== fileToDelete);
-        if (updatedFiles.length === 0) {
-          store.clearAll(); // Clear the store
-          router.push("/Start"); // Route to start page if no files left
+      Swal.fire({
+        title: "Are you sure?",
+        text: "This file will be permanently deleted.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setFileData((prev) =>
+            prev.filter(({ file }) => file !== fileToDelete)
+          );
+          if (selectedFile === fileToDelete) setSelectedFile(null);
+
+          if (fileData.length === 1) {
+            store.clearAll();
+            router.push("/Start");
+          }
         }
-        return updatedFiles;
       });
-      if (selectedFile === fileToDelete) setSelectedFile(null);
     },
-    [selectedFile, router, store]
+    [fileData, selectedFile, router, store]
   );
 
   const handleConfigSave = useCallback((fileName: string, config: any) => {
@@ -136,17 +167,26 @@ export default function MyPrints() {
     if (!allConfigured) {
       Swal.fire(
         "Error",
-        "Please configure all files before printing. Click on the file to set the configurations.",
+        "Please configure all files before printing.",
         "error"
       );
       return;
     }
 
-    store.clearAll(); // Clear the store to avoid duplicates
-    fileData.forEach(({ file, config }) => store.addFile(file, config));
-
-    // Ensure fileData is not cleared before navigation
-    router.push(`/order-summary`);
+    Swal.fire({
+      title: "Confirm Print",
+      text: "Are you sure you want to proceed with printing?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, proceed",
+      cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        store.clearAll();
+        fileData.forEach(({ file, config }) => store.addFile(file, config));
+        router.push("/order-summary");
+      }
+    });
   }, [fileData, store, router]);
 
   const handleFileClick = useCallback(
@@ -181,7 +221,7 @@ export default function MyPrints() {
 
     if (selectedFile.type.startsWith("image/")) {
       return (
-        <img
+        <Image
           src={URL.createObjectURL(selectedFile)}
           alt="Preview"
           className="w-full rounded-lg"
@@ -232,6 +272,7 @@ export default function MyPrints() {
           totalPrice: 0,
           pageSize: 0,
           configured: false,
+          pageType:"normal"
         }); // Add the collage PDF to the store with a default config
 
         Swal.fire("Success", "Collage Saved", "success").then(() => {
@@ -265,7 +306,16 @@ export default function MyPrints() {
     setIsCollageEditorOpen(true);
   }, []);
 
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <PacmanLoader color="#fff" />
+      </div>
+    );
+  }
+
   return (
+
     <div className={`bg-gray-800  max-w-2xl mx-auto p-6 mt-10`}>
       <div className="space-y-4">
         <h2 className="text-xl text-white font-semibold mb-4">
@@ -285,9 +335,11 @@ export default function MyPrints() {
             <span>
               {file.name}{" "}
               {fileData.find((item) => item.file.name === file.name)?.config
-                .configured
-                ? "(configured)"
-                : ""}
+                .configured ? (
+                <TaskAltIcon className="text-green-500" />
+              ) : (
+                ""
+              )}
             </span>
             <button
               onClick={(e) => {

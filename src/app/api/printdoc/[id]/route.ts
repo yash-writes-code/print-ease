@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
-import { deleteFileFromAzure } from "@/lib/server/utils";
+import { deleteFileFromCloudinary } from "@/lib/server/utils";
+import axios from "axios";
 
 // GET: Fetch PrintDoc by ID
+// get printdoc/1
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const client = await clientPromise;
@@ -50,6 +52,20 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "PrintDoc not found" }, { status: 404 });
     }
 
+    const notification_res = await axios.post(process.env.NEXT_PUBLIC_BASE_URL+"/api/notify-user",{
+      userEmail:body.email,
+      title:"Your print job is added to the queue",
+      body: "You will be notified when the job is done"
+    });
+    if(notification_res.status == 500){
+      console.log("kuch err aagya notification bhejne me");
+      console.log(notification_res.data);
+    }
+    else{
+      console.log("notification chli gyi yayyyy");
+
+    }
+
     return NextResponse.json({ message: "PrintDoc updated successfully" }, { status: 200 });
   } catch (error) {
     console.error("Error updating PrintDoc:", error);
@@ -58,6 +74,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 // DELETE: Remove PrintDoc and associated Files by ID
+//delete on url : printdoc/
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const client = await clientPromise;
@@ -81,7 +98,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     for (const fileId of printDoc.fileID) {
       const fileDoc = await FileCollection.findOne({ _id: fileId });
       if (fileDoc) {
-        await deleteFileFromAzure(fileDoc.link); // Call Azure delete function
+        await deleteFileFromCloudinary(fileDoc.link); // Call Cloudinary delete function
       }
     }
     await FileCollection.deleteMany({ _id: { $in: printDoc.fileID } });
