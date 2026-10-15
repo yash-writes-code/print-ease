@@ -1,12 +1,7 @@
-
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "./db"
-
-
-
-
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
@@ -14,6 +9,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: {
     strategy: "jwt", // Alternatively, "database" for MongoDB session storage
   },
+  
   callbacks: {
     async session({ session, token }) {
       // Include user ID in the session for client-side use
